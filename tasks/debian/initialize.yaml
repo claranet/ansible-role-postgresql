@@ -1,0 +1,13 @@
+---
+- name: Initialize new cluster on debian.
+  when:
+    - not _postgresql_pgdata_dir_version_res.stat.exists
+  ansible.builtin.command: >
+    /usr/bin/pg_createcluster {{ postgresql_version }} {{ postgresql_cluster_name }} --datadir {{ _postgresql_data_dir }} -- {{ postgresql_initdb_extra_args }}
+  register: _postgresql_initdb_res
+  changed_when:
+    - _postgresql_bin_path ~ '/initdb' in _postgresql_initdb_res.stdout
+    - "'Data directory' in _postgresql_initdb_res.stdout"
+    - "'Error' not in _postgresql_initdb_res.stdout"
+  become: true
+  become_user: root

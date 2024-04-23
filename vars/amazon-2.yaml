@@ -1,0 +1,11 @@
+---
+# postgresql_version: 9
+_postgresql_data_dir: "{{ postgresql_data_dir | d('/var/lib/pgsql/data', true) }}"
+_postgresql_bin_path: "{{ postgresql_bin_path | d('/usr/bin', true) }}"
+_postgresql_config_path: "{{ postgresql_config_path | d('/var/lib/pgsql/data', true) }}"
+_postgresql_daemon: "{{ postgresql_daemon | d('postgresql', true) }}"
+_postgresql_packages:
+  - postgresql
+  - postgresql-server
+  - postgresql-contrib
+  - postgresql-libs

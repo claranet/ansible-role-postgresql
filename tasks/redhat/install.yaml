@@ -1,0 +1,68 @@
+---
+- name: Install postgresql rpm repostiory
+  ansible.builtin.dnf:
+    name: "{{ _postgresql_repo_rpm_url }}"
+    update_cache: true
+    disable_gpg_check: true
+    state: present
+  tags: skip_ansible_lint
+  environment: "{{ _postgresql_pkg_proxy_env }}"
+
+# alternative for running (sudo dnf -qy module disable postgresql) the command https://github.com/ansible/ansible/issues/64852
+# "Disabling modules:" in pg_module_disable_res.stdout'
+- name: Disable builtin postgresql module on redhat 8+
+  ansible.builtin.copy:
+    dest: /etc/dnf/modules.d/postgresql.module
+    content: |
+      [postgresql]
+      name=postgresql
+      stream=
+      profiles=
+      state=disabled
+    mode: '0600'
+    owner: root
+    group: root
+  when:
+    - (ansible_os_family | lower) == 'redhat'
+    - ansible_distro not in ['fedora', 'amazon']
+    - (ansible_distribution_major_version | int) >= 8
+
+- name: Prevent perl(IPC::Run) package missing that might occur while installing postgresql-devel
+  when:
+    - (ansible_os_family | lower) == 'redhat'
+    - ansible_distro not in ['fedora', 'amazon']
+    - (ansible_distribution_major_version | int) >= 8
+  block:
+    - name: Set perl-IPC-Run repo name
+      ansible.builtin.set_fact:
+        _perl_ipc_run_repo_name: "{{ (ansible_distribution_major_version | int >= 9) | ternary('crb', 'powertools') }}"
+
+    - name: Install EPEL release
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+      environment: "{{ _postgresql_pkg_proxy_env }}"
+
+    - name: Install perl-IPC-Run
+      ansible.builtin.dnf:
+        name: perl-IPC-Run
+        state: present
+        enablerepo: "{{ _perl_ipc_run_repo_name }}"
+      environment: "{{ _postgresql_pkg_proxy_env }}"
+
+- name: Ensure PostgreSQL packages (including locales) are installed.
+  ansible.builtin.dnf:
+    name: "{{ _postgresql_packages + postgresql_locale_packages }}"
+    state: present
+    enablerepo: "{{ postgresql_enablerepo | d(omit, true) }}"
+    # Don't let postgresql-contrib cause the /usr/bin/python symlink
+    # to be installed, which breaks later Ansible runs on Fedora 30,
+    # and affects system behavior in multiple ways.
+    exclude: python-unversioned-command
+    update_cache: true
+  environment: "{{ _postgresql_pkg_proxy_env }}"
+
+# - name: Install locales packages
+#   ansible.builtin.dnf:
+#     name: "{{ postgresql_locale_packages }}"
+#     state: present

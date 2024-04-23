@@ -1,0 +1,317 @@
+---
+# Postgresql version
+postgresql_version: 15
+
+postgresql_debug: false
+
+# Postgresql installation related variables
+# Debian only. Used to generate the locales used by PostgreSQL databases.
+postgresql_locales:
+  - 'en_US.UTF-8'
+  - 'fr_FR.UTF-8'
+
+# Redhat only. For more info check: https://www.thegeekdiary.com/how-to-add-locale-on-centos-rhel-8/
+postgresql_locale_packages:
+  - glibc-langpack-en
+  - glibc-langpack-fr
+
+# RHEL/CentOS only. Set a repository to use for PostgreSQL installation.
+postgresql_enablerepo: ""
+
+
+# Configuration related variables
+postgresql_port: 5432
+postgresql_listen_addresses: 0.0.0.0
+postgresql_max_connections: 100
+postgresql_shared_preload_libraries:
+  - pg_stat_statements
+# `md5` or `scram-sha-256` (https://www.postgresql.org/docs/10/auth-methods.html)
+# Default authentication method used method for the default hba rules
+postgresql_auth_method: "{{ ansible_fips | ternary('scram-sha-256', 'md5') }}"
+# PostgreSQL unix_socket_directories config parameter
+postgresql_unix_socket_directories:
+  - /var/run/postgresql
+
+# Global configuration options that will be set in postgresql.conf.
+postgresql_global_config_options:
+  - option: unix_socket_directories
+    value: '{{ postgresql_unix_socket_directories | join(",") }}'
+  - option: log_directory
+    value: 'log'
+  - option: data_directory
+    value: '{{ _postgresql_data_dir }}'
+  - option: port
+    value: '{{ postgresql_port }}'
+  - option: listen_addresses
+    value: '{{ postgresql_listen_addresses }}'
+  - option: shared_preload_libraries
+    value: '{{ postgresql_shared_preload_libraries | join(",") }}'
+  - option: hba_file
+    value: "{{ _postgresql_config_path }}/pg_hba.conf"
+  - option: max_connections
+    value: "{{ postgresql_max_connections }}"
+# Extra configuration options that are always inserted inside postgresql.conf
+postgresql_global_config_options_extra: []
+
+# Host based authentication (hba) entries to be added to the pg_hba.conf. This
+# variable's defaults reflect the defaults that come with a fresh installation.
+postgresql_hba_entries:
+  - {contype: local, databases: all, users: postgres, method: peer}
+# Easily introduce security risks when having system users matching psql users
+#  - {contype: local, databases: all, users: all, method: peer}
+  - {contype: host, databases: all, users: all, address: '127.0.0.1/32', method: "{{ postgresql_auth_method }}"}
+  - {contype: host, databases: all, users: all, address: '::1/128', method: "{{ postgresql_auth_method }}"}
+postgresql_hba_entries_extra: []
+postgresql_hba_template_path: pg_hba.conf.j2
+postgresql_hba_use_raw: false
+postgresql_hba_raw: ''
+
+
+# 'Advanced' configuration
+# Extra arguments passed to the initdb binary during database initialization
+postgresql_initdb_extra_args: ''
+# Debian only. postgresql cluster name
+postgresql_cluster_name: main
+
+# Set postgresql state when configuration changes are made. Recommended values: `restarted` or `reloaded`
+postgresql_restarted_state: "restarted"
+
+# PostgreSQL system user/group
+postgresql_user: postgres
+postgresql_group: postgres
+
+# Postgresql service state after role run
+postgresql_service_state: started
+# Whether or not to enable the postgresql service after installation
+postgresql_service_enabled: true
+
+
+# Manage tablespaces
+postgresql_tablespaces: []
+  # - name: ssd
+  #   set:
+  #     random_page_cost: 1
+  #     seq_page_cost: 1
+  #   owner: jdoe
+  #   location: /tmp/ssd
+  #   state: present
+  #   location_create: true
+  # - name: temp2
+  #   state: absent
+
+
+# Manage roles/users.
+postgresql_users: []
+# - name: jdoe #required; the rest are optional
+#   password: # defaults to not set
+#   encrypted: # defaults to not set
+#   priv: # defaults to not set
+#   role_attr_flags: # defaults to not set
+#   db: # defaults to not set
+#   login_host: # defaults to 'localhost'
+#   login_password: # defaults to not set
+#   login_user: # defaults to '{{ postgresql_user }}'
+#   login_unix_socket: # defaults to 1st of postgresql_unix_socket_directories
+#   port: # defaults to not set
+#   state: # defaults to 'present'
+# Whether to output user data when managing users.
+postgres_users_no_log: true
+
+# Manage group/role memberships
+postgresql_memberships: []
+
+# Databases to ensure exist.
+postgresql_databases: []
+# - name: exampledb # required; the rest are optional
+#   lc_collate: # defaults to 'en_US.UTF-8'
+#   lc_ctype: # defaults to 'en_US.UTF-8'
+#   encoding: # defaults to 'UTF-8'
+#   template: # defaults to 'template0'
+#   login_host: # defaults to 'localhost'
+#   login_password: # defaults to not set
+#   login_user: # defaults to '{{ postgresql_user }}'
+#   login_unix_socket: # defaults to 1st of postgresql_unix_socket_directories
+#   port: # defaults to not set
+#   owner: # defaults to postgresql_user
+#   state: # defaults to 'present'
+
+# Manage schemas
+postgresql_schemas: []
+
+# Manage tables
+postgresql_tables: []
+
+# Manage objects ownership
+postgresql_ownerships: []
+
+# Manage privileges per postgresql roles
+postgresql_privs: []
+  # - roles: role1,role2
+  #   db: acme
+  #   privs: ALL
+  #   objs: ALL_IN_SCHEMA
+  #   type: table
+  #   schema: public
+  #   grant_option: true
+
+# Extensions management per database
+postgresql_extensions: []
+
+# Inline query strings to run
+postgresql_queries: []
+
+# SQL script files to run
+postgresql_scripts: []
+
+
+# Replication slots
+# physical slots to create on the primary server, ideally one for each replica
+postgresql_replication_slots: []
+  # - slot_name: slot1
+  #   slot_type: logical
+  #   output_plugin: custom_decoder_one
+  #   state: absent
+  #   db: db1
+  # - slot_name: replica1_slot
+  #   slot_type: physical
+  #   state: present
+
+
+# Replication related variables
+# Activate postgresql replication
+postgresql_replication: false
+# Server role in the replication process
+postgresql_replication_role: "" # primary/replica
+postgresql_replication_user: replication_user
+postgresql_replication_password: password
+# Address/DNS name of the primary server used in the pg_basebackup
+# command and also in the pgpass file deployed on the replica nodes
+postgresql_replication_primary_address: ""
+# Port of the Postgresql primary server
+postgresql_replication_primary_port: 5432
+# Replication slot to use on the replica if any
+postgresql_replication_slot: ""
+# Ensure the physical replication slot exists on the primary
+postgresql_replication_create_slot: true
+# primary server name in the ansible inventory
+postgresql_replication_primary_inventory_name: ""
+# ip addresses/dns names used to generate replication hba entries that allow replicas to connect to the primary server
+postgresql_replication_replica_addresses: []
+# User provided replication specific hba rules
+postgresql_replication_hba_entries: []
+# Private replication specific HBA entries
+_postgresql_replication_hba_entries: "{{ postgresql_replication_hba_entries }}"
+  # - contype: host
+  #   databases: replication
+  #   users: "{{ postgresql_replication_user }}"
+  #   address: "{{ postgresql_replication_replica_address }}"
+  #   method: "{{ postgresql_replication_auth_method }}"
+# Authentication method specific for the replica hosts
+postgresql_replication_auth_method: "{{ postgresql_auth_method }}"
+# --checkpoint parameter value of the pg_basebackup command
+postgresql_pg_basebackup_checkpoint: fast   # spread
+# --wal-method parameter value of the pg_basebackup command
+postgresql_pg_basebackup_walmethod: stream  # none/stream/fetch
+# extra arguments appended to the build pg_basebackup command
+postgresql_pg_basebackup_args: ""
+# Actual pg_basebackup built with the previous parameters and used to copy
+# the contents from the primary server to a replica
+postgresql_pg_basebackup_cmd: >
+  {{ _postgresql_bin_path }}/pg_basebackup
+  --no-password
+  --host {{ postgresql_replication_primary_address }}
+  --port {{ postgresql_replication_primary_port }}
+  --username {{ postgresql_replication_user }}
+  --pgdata {{ _postgresql_data_dir }}
+  --checkpoint {{ postgresql_pg_basebackup_checkpoint }}
+  {{ (postgresql_replication_slot != '') | ternary('--slot ' ~ postgresql_replication_slot, '') }}
+  --wal-method {{ postgresql_pg_basebackup_walmethod }}
+  --write-recovery-conf
+  --verbose
+  --progress
+  {{ postgresql_pg_basebackup_args }}
+
+
+# Auto tunning
+postgresql_autotune: true
+# Configuration options set by the autotuning server
+postgresql_autotune_config_options: []
+  # - option: max_connections
+  #   value: 100
+# linux/windows/unix
+postgresql_autotune_os_type: linux
+# 386/x86-64
+postgresql_autotune_arch: x86-64
+# HDD/SSD/SAN
+postgresql_autotune_drive_type: SSD
+# WEB/OLTP/DW/Mixed/Desktop
+postgresql_autotune_env_name: OLTP
+# Include badger from pgconfig
+postgresql_autotune_include_badger: false
+postgresql_autotune_cpus: "{{ ansible_processor_nproc | d('') }}"
+# Total ram in GB
+postgresql_autotune_total_ram: "{{ ((ansible_memtotal_mb / 1024) | round | int) | d('') }}"
+postgresql_autotune_pg_version: "{{ postgresql_version }}"
+postgresql_autotune_base_url: https://api.pgconfig.org
+postgresql_autotune_url: "{{ postgresql_autotune_base_url }}/v1/tuning/get-config?format=conf\
+  &include_pgbadger={{ postgresql_autotune_include_badger }}\
+  &log_format=csvlog&max_connections={{ postgresql_max_connections }}\
+  &pg_version={{ postgresql_version }}\
+  &environment_name={{ postgresql_autotune_env_name }}\
+  &total_ram={{ postgresql_autotune_total_ram }}GB\
+  &cpus={{ postgresql_autotune_cpus }}\
+  &drive_type={{ postgresql_autotune_drive_type }}\
+  &arch={{ postgresql_autotune_arch }}\
+  &os_type={{ postgresql_autotune_os_type }}"
+
+
+# Backup related variables (using the script automysqlbackup from https://sourceforge.net/projects/automysqlbackup/)
+# Controls the management of backups
+postgresql_backup: false
+# Root directory containing the backups
+postgresql_backup_root_dir: /var/backups/postgresql
+# Destination path on the remote server
+postgresql_backup_script_dest: /var/backups/autopostgresqlbackup.sh
+# Include CREATE DATABASE in backup
+postgresql_backup_create_database: "yes"
+# Databases to backup or all to backup all databases
+postgresql_backup_dbnames: "all"
+# Databases to not backup. You can append more databases here.
+postgresql_backup_dbexclude: ""
+# The name of the cron job created to run the backup job on a recurring basis
+postgresql_backup_cron_job_name: Postgresql - Backup management
+postgresql_backup_schedule:
+  minute: 0
+  hour: 0
+# An email address that will be notified after each backup execution
+postgresql_backup_mail_addr: admin@email.com
+# Which day do you want weekly backups? (1 to 7 where 1 is Monday), When set to 0, weekly backups are disabled
+postgresql_backup_doweekly: 6
+# Which day do you want monthly backups? (default is 1, first day of the month), When set to 0, monthly backups are disabled
+postgresql_backup_domonthly: 1
+# Backup retention count for daily backups, Default is 14 days
+postgresql_backup_brdaily: 14
+# Backup retention count for weekly backups, Default is 5 weeks
+postgresql_backup_brweekly: 5
+# Backup retention count for monthly backups, Default is 12 months
+postgresql_backup_brmontly: 12
+# Permissions with which them backups are created
+postgresql_backup_perm: "600"
+
+
+# Proxy variables
+# HTTP and HTTPS proxy to use for general internet access on the MariaDB server
+postgresql_http_general_proxy: ''
+postgresql_https_general_proxy: ''
+# Env var used to provide the proxies to 'internet' tasks
+_postgresql_general_proxy_env: {}
+# HTTP and HTTPS proxy to use for package manager interaction (such as downloading packages, updating cache, etc) on the postgresql server
+postgresql_http_pkg_proxy: ''
+postgresql_https_pkg_proxy: ''
+# Env var used to provide specified proxies to package manager tasks
+_postgresql_pkg_proxy_env: {}
+
+
+# Confirm twice that postgresql should be uninstalled
+postgresql_uninstall_1: false
+postgresql_uninstall_2: false

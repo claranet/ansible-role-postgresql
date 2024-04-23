@@ -1,0 +1,48 @@
+---
+- name: Configure global settings.
+  ansible.builtin.lineinfile:
+    dest: "{{ _postgresql_config_path }}/postgresql.conf"
+    regexp: "^#?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+    mode: '0644'
+  loop: "{{ postgresql_autotune_config_options |
+    community.general.lists_mergeby(postgresql_global_config_options, 'option') |
+    community.general.lists_mergeby(postgresql_global_config_options_extra, 'option') }}"
+  # diff: true
+  notify: Restart postgresql
+
+- name: Configure host based authentication (if entries are configured).
+  ansible.builtin.template:
+    src: "{{ postgresql_hba_template_path }}"
+    dest: "{{ _postgresql_config_path }}/pg_hba.conf"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    backup: true
+    mode: "600"
+  diff: true
+  notify: Restart postgresql
+# Not using the postgresql_hba module because it entailed having
+# a task to ensure the file is empty of default rules
+# a task to add the rules.
+# The first task should only be executed once otherwise the rules
+# task will also always report as changed which is not true.
+# Basically it added more complications whilst the template module
+# works just fine.
+
+- name: Ensure PostgreSQL unix socket dirs exist.
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: "{{ _postgresql_unix_socket_directories_mode }}"
+  loop: "{{ postgresql_unix_socket_directories }}"
+
+- name: Set postgresql service enabled state
+  ansible.builtin.service:
+    name: "{{ _postgresql_daemon }}"
+    enabled: "{{ postgresql_service_enabled }}"
+
+- name: Ensure postgresql service is running with latest up to date configuration
+  ansible.builtin.meta: flush_handlers

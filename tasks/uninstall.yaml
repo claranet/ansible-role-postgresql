@@ -1,0 +1,46 @@
+---
+- name: Remove pip dependencies
+  ansible.builtin.pip:
+    name: "{{ _postgresql_dependencies_pip_packages }}"
+    state: absent
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ _postgresql_bin_path }}"
+
+- name: Remove backup directory
+  ansible.builtin.file:
+    path: "{{ postgresql_backup_root_dir }}"
+    state: absent
+
+- name: Remove backup cron job
+  ansible.builtin.cron:
+    name: "{{ postgresql_backup_cron_job_name }}"
+    state: absent
+
+- name: Stop postgresql service
+  ansible.builtin.systemd:
+    name: "{{ _postgresql_daemon }}"
+    state: stopped
+    enabled: false
+
+- name: Import tasks (debian/uninstall.yaml)
+  ansible.builtin.import_tasks: debian/uninstall.yaml
+  when: ansible_os_family | lower == "debian"
+
+- name: Import tasks (redhat/uninstall.yaml)
+  ansible.builtin.import_tasks: redhat/uninstall.yaml
+  when: ansible_os_family | lower == "redhat"
+
+- name: Delete data dir
+  ansible.builtin.file:
+    path: "{{ _postgresql_data_dir }}"
+    state: absent
+
+- name: Delete tablespace location
+  ansible.builtin.file:
+    path: "{{ item.location }}"
+    state: absent
+  when: item.location | d('') != ''
+  loop: "{{ postgresql_tablespaces }}"
+
+- name: End play after uninstallation
+  ansible.builtin.meta: end_play

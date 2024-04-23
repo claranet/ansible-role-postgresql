@@ -1,0 +1,14 @@
+---
+- name: Remove all postgresql packages
+  ansible.builtin.dnf:
+    name: "{{ _postgresql_packages | select('match', 'postgresql') }}"
+    state: absent
+
+- name: Uninstall postgresql rpm repostiory
+  ansible.builtin.dnf:
+    name: "{{ _postgresql_repo_rpm_url }}"
+    update_cache: true
+    disable_gpg_check: true
+    state: absent
+  tags: skip_ansible_lint
+  environment: "{{ _postgresql_pkg_proxy_env }}"

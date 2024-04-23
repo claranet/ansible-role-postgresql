@@ -1,0 +1,61 @@
+---
+- name: Manage objects ownerships.
+  community.postgresql.postgresql_owner:
+    db: "{{ item.db | d(omit) }}"
+    new_owner: "{{ item.new_owner | d(omit) }}"
+    obj_name: "{{ item.obj_name | d(omit) }}"
+    obj_type: "{{ item.obj_type | d(omit) }}"
+    reassign_owned_by: "{{ item.reassign_owned_by | d(omit) }}"
+    fail_on_role: "{{ item.fail_on_role | d(omit) }}"
+
+    # login_host: "{{ item.login_host | default('localhost') }}"
+    # login_password: "{{ item.login_password | default(omit) }}"
+    port: "{{ postgresql_port }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    # usage of all options
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_ownerships }}"
+  no_log: "{{ postgres_users_no_log }}"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
+
+
+- name: Manage PostgreSQL privileges.
+  community.postgresql.postgresql_privs:
+    roles: "{{ item.roles }}"
+    privs: "{{ item.privs | d(omit) }}"
+    type: "{{ item.type | d(omit) }}"
+    objs: "{{ item.objs | d(omit) }}"
+    schema: "{{ item.schema | d(omit) }}"
+    grant_option: "{{ item.grant_option | d(omit) }}"
+    db: "{{ item.db | d(omit) }}"
+    target_roles: "{{ item.target_roles | d(omit) }}"
+    state: "{{ item.state | default('present') }}"
+
+
+    # login_host: "{{ item.login_host | default('localhost') }}"
+    # login_password: "{{ item.login_password | default(omit) }}"
+    port: "{{ postgresql_port }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    # db: "{{ item.db | default(omit) }}"
+    # usage of all options
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    fail_on_role: "{{ item.fail_on_user | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_privs }}"
+  no_log: "{{ postgres_users_no_log }}"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"

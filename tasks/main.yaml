@@ -1,0 +1,129 @@
+---
+# Variable configuration.
+- name: Setup variables
+  ansible.builtin.import_tasks: setup-vars.yaml
+  tags: always
+
+- name: Run test tasks
+  ansible.builtin.import_tasks: test.yaml
+  tags: always
+
+- name: Include uninstallation tasks
+  ansible.builtin.include_tasks:
+    file: uninstall.yaml
+    apply:
+      tags: uninstallation
+  tags: uninstallation
+  when: postgresql_uninstall_1 | bool and postgresql_uninstall_2 | bool
+
+- name: Import installation tasks
+  ansible.builtin.import_tasks: install.yaml
+  tags:
+    - install
+    - installation
+
+- name: Import initialization tasks
+  ansible.builtin.import_tasks: initialize.yaml
+  tags:
+    - init
+    - initialize
+    - initialise
+
+- name: Import auto tunning tasks
+  ansible.builtin.import_tasks: autotune.yaml
+  when: postgresql_autotune | bool
+  tags:
+    - auto-tune
+    - autotune
+
+- name: Import configuration tasks
+  ansible.builtin.import_tasks: configure.yaml
+  tags:
+    - config
+    - configure
+    - configuration
+
+# - name: Stop after postgresql installation and configuration
+#   ansible.builtin.meta: end_host
+#   tags: always
+
+- name: Import primary replication tasks
+  ansible.builtin.import_tasks: replication-primary.yaml
+  when:
+    - postgresql_replication
+    - postgresql_replication_role == "primary"
+  tags:
+    - repli
+    - replication
+
+- name: Import replica replication tasks
+  ansible.builtin.import_tasks: replication-replica.yaml
+  when:
+    - postgresql_replication
+    - postgresql_replication_role == "replica"
+  tags:
+    - repli
+    - replication
+
+- name: Output log content
+  ansible.builtin.shell: cat {{ (ansible_os_family | lower == 'redhat') | ternary(_postgresql_data_dir ~ '/log/*.log', '/var/log/postgresql/*.log') }}
+  changed_when: false
+  when:
+    - postgresql_replication
+    - postgresql_replication_role == "primary"
+  tags:
+    - repli
+    - replication
+
+- name: Import backup tasks
+  ansible.builtin.import_tasks: backup.yaml
+  when: postgresql_backup | bool
+  tags: backup
+
+- name: Import user management tasks
+  ansible.builtin.import_tasks: users.yaml
+  when: not postgresql_replication or postgresql_replication_role == "primary"
+  tags:
+    - user
+    - users
+
+- name: Import tablespace tasks
+  ansible.builtin.import_tasks: tablespaces.yaml
+  tags:
+    - tblspc
+    - tablespace
+    - tablespaces
+
+- name: Import databases tasks
+  ansible.builtin.import_tasks: databases.yaml
+  when: not postgresql_replication or postgresql_replication_role == "primary"
+  tags:
+    - db
+    - database
+    - databases
+
+- name: Import ownerships and privileges tasks
+  ansible.builtin.import_tasks: ownerships.yaml
+  when: not postgresql_replication or postgresql_replication_role == "primary"
+  tags:
+    - owner
+    - owners
+    - ownership
+    - priv
+    - privs
+    - privileges
+
+- name: Import extensions tasks
+  ansible.builtin.import_tasks: extensions.yaml
+  when: not postgresql_replication or postgresql_replication_role == "primary"
+  tags:
+    - ext
+    - extension
+    - extensions
+
+- name: Import sql script and queries tasks
+  ansible.builtin.import_tasks: sql.yaml
+  when: not postgresql_replication or postgresql_replication_role == "primary"
+  tags:
+    - query
+    - script

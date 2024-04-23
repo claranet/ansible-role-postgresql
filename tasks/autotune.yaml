@@ -1,0 +1,40 @@
+---
+- name: "Show autotune options"
+  when: postgresql_debug
+  ansible.builtin.debug:
+    var: postgresql_autotune_opts
+  vars:
+    postgresql_autotune_opts:
+      postgresql_autotune_os_type: "{{ postgresql_autotune_os_type }}"
+      postgresql_autotune_arch: "{{ postgresql_autotune_arch }}"
+      postgresql_autotune_drive_type: "{{ postgresql_autotune_drive_type }}"
+      postgresql_autotune_env_name: "{{ postgresql_autotune_env_name }}"
+      postgresql_autotune_cpus: "{{ postgresql_autotune_cpus }}"
+      postgresql_autotune_total_ram: "{{ postgresql_autotune_total_ram }}"
+      postgresql_autotune_max_connections: "{{ postgresql_max_connections }}"
+      postgresql_autotune_pg_version: "{{ postgresql_autotune_pg_version }}"
+      postgresql_autotune_url: "{{ postgresql_autotune_url }}"
+
+- name: Request optimized config
+  ansible.builtin.uri:
+    url: "{{ postgresql_autotune_url }}"
+    return_content: true
+  # check cases where pgconfig
+  environment: "{{ _postgresql_general_proxy_env }}"
+  register: _postgresql_autotune_res
+
+- name: Extract individual parameters from autotune response
+  ansible.builtin.set_fact:
+    postgresql_autotune_config_options: "{{ _postgresql_autotune_res.content |
+      regex_replace('^#.*$', '', multiline=true) |
+      regex_replace('^listen_addresses.*$', '', multiline=true) |
+      regex_replace('^\\n+', '', multiline=true) |
+      regex_replace('\\n+$', '', multiline=true) |
+      regex_replace('=', ':', multiline=true) |
+      from_yaml | dict2items(key_name='option', value_name='value') }}"
+  when: _postgresql_autotune_res is succeeded
+
+- name: "Output autotune optimized settings"
+  ansible.builtin.debug:
+    var: postgresql_autotune_config_options
+  when: postgresql_debug

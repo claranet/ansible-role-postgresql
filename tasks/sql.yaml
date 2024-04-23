@@ -1,0 +1,58 @@
+---
+- name: Run queries.
+  community.postgresql.postgresql_query:
+    query: "{{ item.query }}"
+    db: "{{ item.db | default(omit) }}"
+    named_args: "{{ item.named_args | d(omit) }}"
+    positional_args: "{{ item.positional_args | d(omit) }}"
+    autocommit: "{{ item.autocommit | d(omit) }}"
+    encoding: "{{ item.encoding | d(omit) }}"
+    search_path: "{{ item.search_path | d(omit) }}"
+
+    # login_host: "{{ item.login_host | default('localhost') }}"
+    # login_password: "{{ item.login_password | default(omit) }}"
+    port: "{{ postgresql_port }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    # usage of all options
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_queries }}"
+  no_log: "{{ postgres_users_no_log }}"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
+
+
+- name: Run SQL scripts files.
+  community.postgresql.postgresql_script:
+    path: "{{ item.path }}"
+    db: "{{ item.db | default(omit) }}"
+    named_args: "{{ item.named_args | d(omit) }}"
+    positional_args: "{{ item.positional_args | d(omit) }}"
+    encoding: "{{ item.encoding | d(omit) }}"
+    search_path: "{{ item.search_path | d(omit) }}"
+    # connect_params: "{{ item.connect_params | d(omit) }}"
+    # login_host: "{{ item.login_host | default('localhost') }}"
+    # login_password: "{{ item.login_password | default(omit) }}"
+    port: "{{ postgresql_port }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    # usage of all options
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_scripts }}"
+  no_log: "{{ postgres_users_no_log }}"
+  changed_when: false
+  become: true
+  become_user: "{{ postgresql_user }}"
+  when: not ansible_check_mode
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"

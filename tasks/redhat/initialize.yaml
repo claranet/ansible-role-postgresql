@@ -1,0 +1,27 @@
+---
+- name: Update PGDATA env var in the service file on redhat
+  community.general.ini_file:
+    path: '{{ _postgresql_service_path }}'
+    section: Service
+    option: Environment
+    value: PGDATA={{ _postgresql_data_dir }}
+    state: present
+  notify:
+    - Reload systemd
+    - Restart postgresql
+  when:
+    - _postgresql_service_path | length > 0
+  tags: skip_ansible_lint
+
+
+# Not using postgresql-XX-setup cause it didnt consistent output regarding the success or failure reason of an execution
+- name: Ensure PostgreSQL database is initialized
+  ansible.builtin.command: "{{ _postgresql_bin_path }}/pg_ctl initdb --pgdata {{ _postgresql_data_dir }} --options '{{ postgresql_initdb_extra_args }}'"
+  register: _postgresql_initdb_res
+  changed_when:
+    - '"Success" in _postgresql_initdb_res.stdout'
+    # - '"OK" in _postgresql_initdb_res.stdout'
+  when:
+    - not _postgresql_pgdata_dir_version_res.stat.exists
+  become: true
+  become_user: "{{ postgresql_user }}"

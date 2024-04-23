@@ -1,0 +1,35 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - vars/main.yaml
+
+  pre_tasks:
+    - name: Template out the temporary sql script
+      ansible.builtin.copy:
+        src: files/query.sql
+        dest: /tmp/insert_in_table1.sql
+        mode: '0555'
+      tags: always
+    # The Fedora 30+ container images have only C.UTF-8 installed
+    # - name: Set database locale if using Fedora 30+ or RedHat 8+
+    #   ansible.builtin.set_fact:
+    #     postgresql_databases:
+    #       - name: example
+    #         lc_collate: 'C.UTF-8'
+    #         lc_ctype: 'C.UTF-8'
+    #   when:
+    #     - ( ansible_distribution == 'Fedora' and ansible_distribution_major_version >= '30') or
+    #       ( ansible_os_family == 'RedHat' and ansible_distribution_major_version in ['8','9'])
+
+    # - name: Update apt cache.
+    #   ansible.builtin.apt:
+    #     update_cache: true
+    #     cache_valid_time: 600
+    #   changed_when: false
+    #   when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: claranet.postgresql

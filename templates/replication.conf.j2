@@ -1,0 +1,8 @@
+#------------------------------------------------------------------------------
+# REPLICATION
+#------------------------------------------------------------------------------
+
+primary_slot_name = {{ postgresql_replication_slot }}
+# primary_conninfo is created in postgresql.auto.conf
+primary_conninfo = 'host={{ postgresql_replication_master }} port=5432 user={{ postgresql_replication_user }}'
+promote_trigger_file = '{{ postgresql_data_dir }}/failover'

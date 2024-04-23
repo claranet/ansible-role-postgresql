@@ -1,0 +1,47 @@
+---
+- name: Show variables
+  ansible.builtin.debug:
+    var: v
+  vars:
+    v:
+      ansible_distribution: "{{ ansible_distribution }}"
+      ansible_os_family: "{{ ansible_os_family }}"
+      ansible_distribution_version: "{{ ansible_distribution_version }}"
+      ansible_distribution_major_version: "{{ ansible_distribution_major_version }}"
+      ansible_distribution_release: "{{ ansible_distribution_release }}"
+
+- name: Import tasks (debian/install.yaml)
+  ansible.builtin.import_tasks: debian/install.yaml
+  when: ansible_os_family | lower == "debian"
+
+- name: Import tasks (redhat/install.yaml)
+  ansible.builtin.import_tasks: redhat/install.yaml
+  when: ansible_os_family | lower == "redhat"
+
+- name: Include {{ ansible_pkg_mgr + '/install.yaml' }}
+  ansible.builtin.include_tasks: "{{ item }}"
+  loop: "{{ query('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_pkg_mgr }}/install.yaml"
+      skip: true
+
+- name: Create a dedicated virtual env for postgresql related libraries
+  ansible.builtin.pip:
+    name: pip
+    extra_args: --upgrade
+    virtualenv: "{{ _postgresql_virtualenv_path }}"
+    virtualenv_command: python3 -m venv
+  become_user: "{{ postgresql_user }}"
+  environment: "{{ _postgresql_general_proxy_env | ansible.builtin.combine({'PATH': _postgresql_pythonized_path}) }}"
+
+# Errors while installing this dependency on redhat system. Used the link below to provide a solution
+# https://bobcares.com/blog/error-pg_config-executable-not-found/
+# https://linuxhint.com/pg-config-executable-not-found/
+- name: Install pip dependencies
+  ansible.builtin.pip:
+    name: "{{ _postgresql_dependencies_pip_packages }}"
+    virtualenv: "{{ _postgresql_virtualenv_path }}"
+  become_user: "{{ postgresql_user }}"
+  environment: "{{ _postgresql_general_proxy_env | ansible.builtin.combine({'PATH': _postgresql_pythonized_path}) }}"

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+python3 -m pip install -r "$(dirname "$0")/requirements.txt"
+ansible-galaxy install -r "$(dirname "$0")/requirements.yml"

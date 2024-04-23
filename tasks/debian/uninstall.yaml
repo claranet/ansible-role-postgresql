@@ -1,0 +1,22 @@
+---
+- name: Drop cluster
+  ansible.builtin.command: /usr/bin/pg_dropcluster --stop {{ postgresql_version }} main
+  register: _postgresql_drop_cluster_res
+  changed_when: _postgresql_drop_cluster_res.rc == 0
+  ignore_errors: true
+
+- name: Purge all postgresql packages
+  ansible.builtin.apt:
+    name: "{{ _postgresql_packages | select('match', 'postgresql') }}"
+    state: absent
+    purge: true
+
+- name: Remove repository file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/pgdg.list
+    state: absent
+
+- name: Remove repository signing key
+  ansible.builtin.file:
+    path: /etc/apt/trusted.gpg.d/pgdb.asc
+    state: absent

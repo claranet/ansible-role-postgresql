@@ -1,0 +1,681 @@
+#!/bin/bash
+
+# ((( License and Copyright
+# PostgreSQL Backup Script
+# https://github.com/k0lter/autopostgresqlbackup
+# Copyright (c) 2005 Aaron Axelsen <axelseaa@amadmax.com>
+#               2005 Friedrich Lobenstock <fl@fl.priv.at>
+#               2013-2023 Emmanuel Bouthenot <kolter@openics.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# )))
+
+# ((( Variables
+# Username to access the PostgreSQL server e.g. dbuser
+USERNAME={{ postgresql_user }}
+
+# Password
+# create a file ${HOME}/.pgpass containing a line like this
+#   hostname:*:*:dbuser:dbpass
+# replace hostname with the value of DBHOST and postgres with
+# the value of USERNAME
+
+# Host name (or IP address) of PostgreSQL server e.g localhost
+DBHOST=localhost
+
+# Port of PostgreSQL server e.g 5432 (only used if DBHOST != localhost)
+DBPORT={{ postgresql_port }}
+
+# List of DBNAMES for Daily/Weekly Backup e.g. "DB1 DB2 DB3"
+DBNAMES="{{ postgresql_backup_dbnames }}"
+
+# pseudo database name used to dump global objects (users, roles, tablespaces)
+GLOBALS_OBJECTS="postgres_globals"
+
+# Backup directory location e.g /backups
+BACKUPDIR="{{ postgresql_backup_root_dir }}"
+
+# Email Address to send mail to? (user@domain.com)
+MAILADDR="{{ postgresql_backup_mail_addr }}"
+
+# ============================================================
+# === ADVANCED OPTIONS ( Read the doc's below for details )===
+#=============================================================
+
+# List of DBNAMES to EXLUCDE if DBNAMES are set to all (must be in " quotes)
+DBEXCLUDE="{{ postgresql_backup_dbexclude }}"
+
+# Include CREATE DATABASE in backup?
+CREATE_DATABASE="{{ postgresql_backup_create_database }}"
+
+# Which day do you want weekly backups? (1 to 7 where 1 is Monday)
+# When set to 0, weekly backups are disabled
+DOWEEKLY={{ postgresql_backup_doweekly }}
+
+# Which day do you want monthly backups? (default is 1, first day of the month)
+# When set to 0, monthly backups are disabled
+DOMONTHLY={{ postgresql_backup_domonthly }}
+
+# Backup retention count for daily backups
+# Default is 14 days
+BRDAILY={{ postgresql_backup_brdaily }}
+
+# Backup retention count for weekly backups
+# Default is 5 weeks
+BRWEEKLY={{ postgresql_backup_brweekly }}
+
+# Backup retention count for monthly backups
+# Default is 12 months
+BRMONTHLY={{ postgresql_backup_brmontly }}
+
+# Choose Compression type. (gzip, pigz, bzip2, xz or zstd)
+COMP=gzip
+
+# Compression options
+COMP_OPTS=
+
+# OPT string for use with pg_dump (see man pg_dump)
+OPT=""
+
+# Backup files extension
+EXT="sql"
+
+# Backup files permission
+PERM={{ postgresql_backup_perm }}
+
+# Encryption settings
+#
+# It is recommended to backup into a staging directory, and then use the
+# POSTBACKUP script to sync the encrypted files to the desired location.
+#
+# For now the only encryption method supported is using GnuPG
+#
+# Decryption:
+# gpg --decrypt --output backup.sql.gz backup.sql.gz.enc
+#
+# Enable encryption
+ENCRYPTION=no
+
+# Encryption public key (path to the key)
+ENCRYPTION_PUBLIC_KEY=""
+
+# Suffix for encyrpted files
+ENCRYPTION_SUFFIX=".enc"
+
+# Command to run before backups (uncomment to use)
+#PREBACKUP="/etc/postgresql-backup-pre"
+
+# Command run after backups (uncomment to use)
+#POSTBACKUP="/etc/postgresql-backup-post"
+# )))
+
+{% raw %}
+# ((( OS Specific
+if [ -f /etc/default/autopostgresqlbackup ]; then
+    # shellcheck source=/dev/null
+    . /etc/default/autopostgresqlbackup
+fi
+# )))
+
+# ((( Documentation
+#=====================================================================
+# Options documentation
+#=====================================================================
+# Set USERNAME and PASSWORD of a user that has at least SELECT permission to
+# ALL databases.
+#
+# Set the DBHOST option to the server you wish to backup, leave the default to
+# backup "this server". To backup multiple servers make copies of this file and
+# set the options for that server.
+#
+# Put in the list of DBNAMES (Databases) to be backed up. If you would like to
+# backup ALL DBs on the server set DBNAMES="all". If set to "all" then any new
+# DBs will automatically be backed up without needing to modify this backup
+# script when a new DB is created.
+#
+# If the DB you want to backup has a space in the name replace the space with a
+# % e.g. "data base" will become "data%base"
+#
+# You can change the backup storage location to anything you like by using the
+# BACKUPDIR setting.
+#
+# === Advanced options doc's ===
+#
+# If you set DBNAMES="all" you can configure the option DBEXCLUDE. Other wise
+# this option will not be used. This option can be used if you want to backup
+# all dbs, but you want exclude some of them. (eg. if a db is to big).
+#
+# Set CREATE_DATABASE to "yes" (the default) if you want your SQL-Dump to
+# create a database with the same name as the original database when restoring.
+# Saying "no" here will allow your to specify the database name you want to
+# restore your dump into, making a copy of the database by using the dump
+# created with autopostgresqlbackup.
+#
+# Use PREBACKUP and POSTBACKUP to specify Per and Post backup commands
+# or scripts to perform tasks either before or after the backup process.
+#
+#=====================================================================
+# Backup Rotation..
+#=====================================================================
+#
+# Rotation is configurable for each period:
+#  - daily (max $BRDAILY backups are keeped)
+#  - weekly (max $BRWEEKLY backups are keeped)
+#  - monthy (max $BRMONTHLY backups are keeped)
+#
+# )))
+
+# ((( Defaults
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/postgres/bin:/usr/local/pgsql/bin
+HOMEPAGE="https://github.com/k0lter/autopostgresqlbackup"
+NAME="AutoPostgreSQLBackup"         # Script name
+VERSION="2.0"                       # Version Number
+DATE="$(date '+%Y-%m-%d_%Hh%Mm')"   # Datestamp e.g 2002-09-21
+DNOW="$(date '+%u')"                # Day number of the week 1 to 7 where 1 represents Monday
+DNOM="$(date '+%d')"                # Date of the Month e.g. 27
+LOG_DIR="${BACKUPDIR}"              # Directory where the main log is saved
+# Fix day of month (left padding with 0)
+DOMONTHLY="$(echo "${DOMONTHLY}" | sed -r 's/^[0-9]$/0\0/')"
+
+# Using a shared memory filesystem (if available) to avoid
+# issues when there is no left space on backup storage
+if [ -w "/dev/shm" ]; then
+    LOG_DIR="/dev/shm"
+fi
+
+LOG_FILE="${LOG_DIR}/${NAME}_${DBHOST//\//_}-$(date '+%Y-%m-%d_%Hh%Mm').log"
+
+# Debug mode
+DEBUG="no"
+
+# Encryption prerequisites
+GPG_HOMEDIR=
+
+# pg_dump options
+if [ -n "${OPT}" ]; then
+    IFS=" " read -r -a PG_OPTIONS <<< "${OPT}"
+else
+    PG_OPTIONS=()
+fi
+
+# Create required directories
+if [ ! -e "${BACKUPDIR}" ]; then         # Check Backup Directory exists.
+    mkdir -p "${BACKUPDIR}"
+fi
+
+if [ ! -e "${BACKUPDIR}/daily" ]; then   # Check Daily Directory exists.
+    mkdir -p "${BACKUPDIR}/daily"
+fi
+
+if [ ! -e "${BACKUPDIR}/weekly" ]; then  # Check Weekly Directory exists.
+    mkdir -p "${BACKUPDIR}/weekly"
+fi
+
+if [ ! -e "${BACKUPDIR}/monthly" ]; then # Check Monthly Directory exists.
+    mkdir -p "${BACKUPDIR}/monthly"
+fi
+
+# Hostname for LOG information and
+# pg_dump{,all} connection settings
+if [ "${DBHOST}" = "localhost" ]; then
+    HOST="$(hostname --fqdn)"
+    PG_CONN=()
+else
+    HOST="${DBHOST}:${DBPORT}"
+    PG_CONN=(--host "${DBHOST}" --port "${DBPORT}")
+fi
+if [ -n "${USERNAME}" ]; then
+    PG_CONN+=(--username "${USERNAME}")
+fi
+# )))
+
+# ((( log{,ger,_info,_debug,_warn,_error}()
+logger() {
+    local fd line severity reset color
+
+    fd="${1}"
+    severity="${2}"
+    reset=
+    color=
+
+    if [ -n "${TERM}" ]; then
+        reset="\e[0m"
+        case "${severity}" in
+            error)
+                color="\e[0;91m"
+                ;;
+            warn)
+                color="\e[0;93m"
+                ;;
+            debug)
+                color="\e[0;96m"
+                ;;
+            *)
+                color="\e[0;94m"
+                ;;
+        esac
+    fi
+
+    while IFS= read -r line ; do
+        printf "%s|%s|%s\n" "${fd}" "${severity}" "${line}" >> "${LOG_FILE}"
+        if [ "${DEBUG}" = "yes" ]; then
+            if [ "${fd}" = "out" ]; then
+                printf "${color}%6s${reset}|%s\n" "${severity}" "${line}" >&6
+            elif [ "${fd}" = "err" ]; then
+                printf "${color}%6s${reset}|%s\n" "${severity}" "${line}" >&7
+            fi
+        fi
+    done
+}
+
+log() {
+    echo "$@" | logger "out" ""
+}
+
+log_debug() {
+    echo "$@" | logger "out" "debug"
+}
+
+log_info() {
+    echo "$@" | logger "out" "info"
+}
+
+log_error() {
+    echo "$@" | logger "err" "error"
+}
+
+log_warn() {
+    echo "$@" | logger "err" "warn"
+}
+# )))
+
+# ((( gpg_setup()
+gpg_setup() {
+    GPG_HOMEDIR="$(mktemp --quiet --directory -t "${NAME}.XXXXXX")"
+    chmod 700 "${GPG_HOMEDIR}"
+    log_debug "With encryption enabled creating a temporary GnuPG home in ${GPG_HOMEDIR}"
+    gpg --quiet --homedir "${GPG_HOMEDIR}" --quick-gen-key --batch --passphrase-file /dev/null "root@$(hostname --fqdn)"
+}
+# )))
+
+# ((( dblist()
+dblist () {
+    local cmd_prog cmd_args raw_dblist dblist dbexcl databases
+
+    cmd_prog="psql"
+    cmd_args=(-t -l -A -F:)
+
+    if [ "${#PG_CONN[@]}" -gt 0 ]; then
+        cmd_args+=("${PG_CONN[@]}")
+    fi
+
+    log_debug "Running command: ${cmd_prog} ${cmd_args[*]}"
+    raw_dblist=$(
+        if [ -n "${SU_USERNAME}" ]; then
+            su - "${SU_USERNAME}" -l -c "${cmd_prog} ${cmd_args[*]}"
+        else
+            "${cmd_prog}" "${cmd_args[@]}"
+        fi
+    )
+
+    read -r -a dblist <<< "$(
+        printf "%s" "${raw_dblist}" | \
+            sed -r -n 's/^([^:]+):.+$/\1/p' | \
+            tr '\n' ' '
+    )"
+    log_debug "Automatically found databases: ${dblist[*]}"
+
+    if [ -n "${DBEXCLUDE}" ]; then
+        IFS=" " read -r -a dbexcl <<< "${DBEXCLUDE}"
+    else
+        dbexcl=()
+    fi
+    dbexcl+=(template0)
+    log_debug "Excluded databases: ${dbexcl[*]}"
+
+    mapfile -t databases < <(
+        comm -23 \
+            <(IFS=$'\n'; echo "${dblist[*]}" | sort) \
+            <(IFS=$'\n'; echo "${dbexcl[*]}" | sort) \
+        )
+    databases+=("${GLOBALS_OBJECTS}")
+    log_debug "Database(s) to be backuped: ${databases[*]}"
+
+    printf "%s " "${databases[@]}"
+}
+# )))
+
+# ((( dbdump()
+dbdump () {
+    local db cmd_prog cmd_args pg_args
+
+    db="${1}"
+    pg_args="${PG_OPTIONS[*]}"
+
+    if [ "${db}" = "${GLOBALS_OBJECTS}" ]; then
+        cmd_prog="pg_dumpall"
+        cmd_args=(--globals-only)
+    else
+        cmd_prog="pg_dump"
+        cmd_args=("${DB}")
+        if [ "${CREATE_DATABASE}" = "yes" ]; then
+            pg_args+=(--create)
+        fi
+    fi
+
+    if [ "${#PG_CONN[@]}" -gt 0 ]; then
+        cmd_args+=("${PG_CONN[@]}")
+    fi
+    if [ "${#pg_args[@]}" -gt 0 ]; then
+        cmd_args+=("${pg_args[@]}")
+    fi
+
+    log_debug "Running command: ${cmd_prog} ${cmd_args[*]}"
+    if [ -n "${SU_USERNAME}" ]; then
+        su - "${SU_USERNAME}" -l -c "${cmd_prog} ${cmd_args[*]}"
+    else
+        "${cmd_prog}" "${cmd_args[@]}"
+    fi
+}
+# )))
+
+# ((( encryption()
+encryption() {
+    log_debug "Encrypting using public key ${ENCRYPTION_PUBLIC_KEY}"
+    gpg --homedir "${GPG_HOMEDIR}" --encrypt --passphrase-file /dev/null --recipient-file "${ENCRYPTION_PUBLIC_KEY}" 2>&7
+}
+# )))
+
+# ((( compression()
+compression () {
+    if [ -n "${COMP_OPTS}" ]; then
+        IFS=" " read -r -a comp_args <<< "${COMP_OPTS}"
+        log_debug "Compressing using '${COMP} ${comp_args[*]}'"
+        "${COMP}" "${comp_args[@]}" 2>&7
+    else
+        log_debug "Compressing using '${COMP}'"
+        "${COMP}" 2>&7
+    fi
+}
+# )))
+
+# ((( dump()
+dump() {
+    local db_name dump_file comp_ext
+
+    db_name="${1}"
+    dump_file="${2}"
+
+    if [ -n "${COMP}" ]; then
+        comp_ext=".comp"
+        case "${COMP}" in
+            gzip|pigz)
+                comp_ext=".gz"
+                ;;
+            bzip2)
+                comp_ext=".bz2"
+                ;;
+            xz)
+                comp_ext=".xz"
+                ;;
+            zstd)
+                comp_ext=".zstd"
+                ;;
+        esac
+        dump_file="${dump_file}${comp_ext}"
+    fi
+
+    if [ "${ENCRYPTION}" = "yes" ]; then
+        dump_file="${dump_file}${ENCRYPTION_SUFFIX}"
+    fi
+
+    if [ -n "${COMP}" ] && [ "${ENCRYPTION}" = "yes" ]; then
+        log_debug "Dumping (${db_name}) +compress +encrypt to '${dump_file}'"
+        dbdump "${db_name}" | compression | encryption > "${dump_file}"
+    elif [ -n "${COMP}" ]; then
+        log_debug "Dumping (${db_name}) +compress to '${dump_file}'"
+        dbdump "${db_name}" | compression > "${dump_file}"
+    elif [ "${ENCRYPTION}" = "yes" ]; then
+        log_debug "Dumping (${db_name}) +encrypt to '${dump_file}'"
+        dbdump "${db_name}" | encryption > "${dump_file}"
+    else
+        log_debug "Dumping (${db_name}) to '${dump_file}'"
+        dbdump "${db_name}" > "${dump_file}"
+    fi
+
+    if [ -f "${dump_file}" ]; then
+        log_debug "Fixing permissions (${PERM}) on '${dump_file}'"
+        chmod "${PERM}" "${dump_file}"
+        if [ ! -s "${dump_file}" ]; then
+            log_error "Something went wrong '${dump_file}' is empty (no space left on device?)"
+        fi
+    else
+        log_error "Something went wrong '${dump_file}' does not exists (error during dump?)"
+    fi
+}
+# )))
+
+# ((( cleanup()
+cleanup() {
+    local dumpdir db when count line
+
+    dumpdir="${1}"
+    db="${2}"
+    when="${3}"
+    count="${4}"
+
+    # Since version >= 2.0 the dump filename no longer contains the week number
+    # or the abbreviated month name so in order to be sure to remove the older
+    # dumps we need to sort the filename on the datetime part (YYYY-MM-DD_HHhMMm)
+
+    log_info "Rotating ${count} ${when} backups..."
+    log_debug "Looking for '${db}_*' in '${dumpdir}/${when}/${db}'"
+    find "${dumpdir}/${when}/${db}/" -name "${db}_*" | \
+        sed -r 's/^.+([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}h[0-9]{2}m).*$/\1 \0/' | \
+        sort -r | \
+        sed -r -n 's/\S+ //p' | \
+        tail "+${count}" | \
+        xargs -L1 rm -fv | \
+        while IFS= read -r line ; do
+            log_info "${line}"
+        done
+}
+# )))
+
+# ((( usage()
+usage() {
+cat <<EOH
+USAGE: $(basename "$0") [OPTIONS]
+
+${NAME} ${VERSION}
+
+A fully automated tool to make periodic backups of PostgreSQL databases.
+
+Options:
+    -h  Shows this help
+    -d  Run in debug mode (no mail sent)
+EOH
+}
+# )))
+
+# ((( Process command line arguments
+
+while getopts "hd" OPTION ; do
+    case "${OPTION}" in
+        h)
+            usage
+            exit 0
+            ;;
+        d)
+            DEBUG="yes"
+            ;;
+        *)
+            printf "Try \`%s -h\` to check the command line arguments\n" "$(basename "$0")" >&2
+            exit 1
+    esac
+done
+# )))
+
+# ((( I/O redirection(s) for logging
+exec 6>&1           # Link file descriptor #6 with stdout.
+                    # Saves stdout.
+exec 7>&2           # Link file descriptor #7 with stderr.
+                    # Saves stderr.
+exec >  >( logger "out")
+exec 2> >( logger "err")
+# )))
+
+# ((( PreBackup
+# Run command before we begin
+if [ -n "${PREBACKUP}" ]; then
+    log_info "Prebackup command output:"
+    ${PREBACKUP} | \
+        while IFS= read -r line ; do
+            log "  ${line}"
+        done
+fi
+# )))
+
+# ((( main()
+log_info "${NAME} version ${VERSION}"
+log_info "Homepage: ${HOMEPAGE}"
+log_info "Backup of Database Server - ${HOST}"
+
+if [ -n "${COMP}" ]; then
+    if ! command -v "${COMP}" >/dev/null ; then
+        log_warn "Disabling compression, '${COMP}' command not found"
+        unset COMP
+    fi
+fi
+
+if [ "${ENCRYPTION}" = "yes" ]; then
+    if [ ! -s "${ENCRYPTION_PUBLIC_KEY}" ]; then
+        log_warn "Disabling encryption, '${ENCRYPTION_PUBLIC_KEY}' is empty or does not exists"
+        ENCRYPTION="no"
+    elif ! command -v "gpg" >/dev/null ; then
+        log_warn "Disabling encryption, 'gpg' command not found"
+        ENCRYPTION="no"
+    else
+        gpg_setup
+        if ! keyinfo="$(gpg --quiet --homedir "${GPG_HOMEDIR}" "${ENCRYPTION_PUBLIC_KEY}" 2>/dev/null)"; then
+            log_warn "Disabling encryption, key in '${ENCRYPTION_PUBLIC_KEY}' does not seems to be a valid public key"
+            ENCRYPTION="no"
+            if command -v "openssl" >/dev/null && openssl x509 -noout -in "${ENCRYPTION_PUBLIC_KEY}" >/dev/null 2>&1; then
+                log_warn "public key in '${ENCRYPTION_PUBLIC_KEY}' seems to be in PEM format"
+                log_warn "Encryption using openssl is no longer supported: see ${HOMEPAGE}#openssl-encryption"
+            fi
+        else
+            keyfp="$(echo "${keyinfo}" | sed -r -n 's/^\s*([a-z0-9]+)\s*$/\1/pi')"
+            keyuid="$(echo "${keyinfo}" | sed -r -n 's/^\s*uid\s+(\S.*)$/\1/pi' | head -n1)"
+            log_info "Encryption public key is: 0x${keyfp} (${keyuid})"
+        fi
+    fi
+fi
+
+log_info "Backup Start: $(date)"
+if [ "${DNOM}" = "${DOMONTHLY}" ]; then
+    period="monthly"
+    rotate="${BRMONTHLY}"
+elif [ "${DNOW}" = "${DOWEEKLY}" ]; then
+    period="weekly"
+    rotate="${BRWEEKLY}"
+else
+    period="daily"
+    rotate="${BRDAILY}"
+fi
+
+# If backing up all DBs on the server
+if [ "${DBNAMES}" = "all" ]; then
+    DBNAMES="$(dblist)"
+fi
+
+for db in ${DBNAMES} ; do
+    db="${db//%/ / }"
+    log_info "Backup of Database (${period}) '${db}'"
+
+    backupdbdir="${BACKUPDIR}/${period}/${db}"
+    if [ ! -e "${backupdbdir}" ]; then
+        log_debug "Creating Backup DB directory '${backupdbdir}'"
+        mkdir -p "${backupdbdir}"
+    fi
+
+    cleanup "${BACKUPDIR}" "${db}" "${period}" "${rotate}"
+
+    backupfile="${backupdbdir}/${db}_${DATE}.${EXT}"
+    dump "${db}" "${backupfile}"
+done
+log_info "Backup End: $(date)"
+
+log_info "Total disk space used for ${BACKUPDIR}: $(du -hs "${BACKUPDIR}" | cut -f1)"
+# )))
+
+# ((( PostBackup
+# Run command when we're done
+if [ -n "${POSTBACKUP}" ]; then
+    log_info "Postbackup command output:"
+    ${POSTBACKUP} | \
+        while IFS= read -r line ; do
+            log "  ${line}"
+        done
+fi
+# )))
+
+# ((( cleanup I/O redirections
+exec 1>&6 6>&-      # Restore stdout and close file descriptor #6.
+exec 2>&7 7>&-      # Restore stdout and close file descriptor #7.
+# )))
+
+# ((( Reporting
+if [ "${DEBUG}" = "no" ] && grep -q '^err|' "${LOG_FILE}" ; then
+    (
+        printf "*Errors/Warnings* (below) reported during backup on *%s*:\n\n" "${HOST}"
+        grep '^err|' "${LOG_FILE}" | cut -d '|' -f 3- | \
+        while IFS= read -r line ; do
+            printf "  | %s\n" "${line}"
+        done
+        printf "\n\nFull backup log follows:\n\n"
+        grep -v '^...|debug|' "${LOG_FILE}" | \
+        while IFS="|" read -r fd level line ; do
+            if [ -n "${level}" ]; then
+                printf "%8s| %s\n" "*${level}*" "${line}"
+            else
+                printf "%8s| %s\n" "" "${line}"
+            fi
+        done
+        printf "\nFor more information, try to run %s in debug mode, see \`%s -h\`\n" "${NAME}" "$(basename "$0")"
+    ) | mail -s "${NAME} issues on $(hostname --fqdn)" "${MAILADDR}"
+fi
+# )))
+
+# ((( Cleanup and exit()
+if [ -s "${LOGERR}" ]; then
+    rc=1
+else
+    rc=0
+fi
+
+# Cleanup GnuPG home dir
+if [ -d "${GPG_HOMEDIR}" ]; then
+    rm -rf "${GPG_HOMEDIR}"
+fi
+
+# Clean up log files
+rm -f "${LOG_FILE}"
+
+exit ${rc}
+# )))
+
+# vim: foldmethod=marker foldlevel=0 foldenable
+{% endraw %}

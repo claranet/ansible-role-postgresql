@@ -1,0 +1,88 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    postgresql_autotune: true
+    postgresql_replication: true
+  vars_files:
+    - vars/main.yaml
+
+  pre_tasks:
+    # The Fedora 30+ container images have only C.UTF-8 installed
+    - name: Always tags
+      tags: always
+      block:
+        - name: Set database locale if using Fedora 30+ or RedHat 8+
+          ansible.builtin.set_fact:
+            postgresql_databases:
+              - name: example
+                lc_collate: 'C.UTF-8'
+                lc_ctype: 'C.UTF-8'
+          when:
+            - false
+            - ( ansible_distribution == 'Fedora' and ansible_distribution_major_version >= '30') or
+              ( ansible_os_family == 'RedHat' and ansible_distribution_major_version in ['8','9'])
+
+        - name: Install dig on debian-ish
+          ansible.builtin.package:
+            name: dnsutils
+            state: present
+          when: ansible_os_family | lower == 'debian'
+
+        - name: Install dig on redhat-ish
+          ansible.builtin.dnf:
+            name: bind-utils
+            state: present
+          when: ansible_os_family | lower == 'redhat'
+
+        - name: Dig short
+          ansible.builtin.command:
+            cmd: dig +short {{ postgresql_replication_replica_dns | join(' ') }}
+          changed_when: false
+          register: _dig_short
+
+        - name: Resolve dynamic dns to ip in order to put them in pg_hba
+          ansible.builtin.set_fact:
+            postgresql_replication_replica_addresses: "{{ _dig_short.stdout_lines | product(['32']) | map('join', '/') }}"
+            # postgresql_replication_replica_addresses: "{{ _dig_short.stdout_lines }}"
+
+        - name: Dig short
+          ansible.builtin.command:
+            cmd: dig +short {{ postgresql_replication_primary_dns }}
+          changed_when: false
+          register: _dig_short
+
+        - name: Resolve dynamic dns to ip in order to put them in pg_hba
+          ansible.builtin.set_fact:
+            postgresql_replication_primary_address: "{{ _dig_short.stdout }}"
+
+        - name: Debug
+          ansible.builtin.debug:
+            var: v
+          vars:
+            v:
+              postgresql_replication_replica_addresses: "{{ postgresql_replication_replica_addresses }}"
+              postgresql_replication_primary_address: "{{ postgresql_replication_primary_address }}"
+              postgresql_replication_primary_dns: "{{ postgresql_replication_primary_dns }}"
+              postgresql_replication_replica_dns: "{{ postgresql_replication_replica_dns }}"
+
+        - name: Template out the temporary sql script
+          ansible.builtin.copy:
+            src: files/query.sql
+            dest: /tmp/insert_in_table1.sql
+            mode: '0555'
+        # - name: End play
+        #   tags: always
+        #   ansible.builtin.meta: end_play
+        # - name: Update apt cache.
+        #   ansible.builtin.apt:
+        #     update_cache: true
+        #     cache_valid_time: 600
+        #   changed_when: false
+        #   when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: claranet.postgresql

@@ -1,0 +1,195 @@
+---
+# Configuration
+postgresql_port: 5432
+postgresql_listen_addresses: 0.0.0.0
+postgresql_shared_preload_libraries:
+  - pg_stat_statements
+postgresql_max_connections: 100
+# Custom configuration options provided by the user
+postgresql_global_config_options_extra:
+  - option: log_statement
+    value: all
+postgresql_hba_entries_extra: []
+  # - {contype: local, databases: all, users: postgres, method: peer}
+
+postgresql_autotune: true
+# postgresql_autotune_base_url: http://192.168.56.101:3000
+
+postgres_users_no_log: false
+postgresql_users:
+# Create two groups 'group1' and 'group2' by making use of thr role_attr_flags attribute
+  - name: group1
+    role_attr_flags: NOLOGIN
+  - name: group2
+    role_attr_flags: NOLOGIN
+# Create 'user1' and 'user2' with default parameters
+  - name: user1
+  - name: user2
+# Create user 'jdoe' with more personalized parameters
+  - name: jdoe
+    password: password
+    comment: this is a test user
+    expires: "Jun 21 2029"
+
+postgresql_memberships:
+# Ensure the role 'user1' belongs to group 'group1'
+  - groups:
+    - group1
+    target_roles:
+    - user1
+    state: present
+# Ensure the role 'user2' does not belong to the group 'group2'
+  - groups:
+    - group2
+    target_roles:
+    - user2
+    state: absent
+# Ensure the role 'jdoe' does not belong to any group
+  - groups: []
+    target_roles:
+    - jdoe
+    state: exact
+
+postgresql_tablespaces:
+# Create tablespace 'ssd'
+  - name: ssd
+    set:
+      random_page_cost: 1
+      seq_page_cost: 1
+    owner: jdoe
+    location: /tmp/ssd
+    location_create: true # default is false
+    state: present # default is present
+    location_owner: postgres # default is postgres
+    location_group: postgres # default is postgres
+    location_mode: '0700' # default is '0700'
+# Delete tablespaces 'temp2'
+  - name: temp2
+    state: absent
+    location: /tmp/temp2_tblspc
+    set:
+      random_page_cost: 1
+    owner: user1
+
+postgresql_databases:
+  - name: db1
+    owner: user1
+    encoding: UTF-8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    conn_limit: 100
+    template: template0
+  - name: db2
+    owner: user2
+  - name: db3
+    state: absent
+
+postgresql_schemas:
+  - name: acme
+    db: db1
+  - name: acme
+    db: db2
+  - name: not_existing_shema
+    db: db1
+    state: absent
+    cascade_drop: true
+
+postgresql_tables:
+  - name: table1
+    db: db1
+    owner: user1
+    columns:
+      - id SERIAL PRIMARY KEY
+      - name VARCHAR(50)
+      - age INT
+      - email VARCHAR(100)
+    tablespace: ssd
+    storage_params:
+      - fillfactor=10
+      - autovacuum_analyze_threshold=1
+  - name: acme.table2
+    db: db1
+    columns: waste_id int
+    unlogged: true
+    # like: public.table1
+    # including: comments, indexes
+  # - name: table2
+  #   db: db1
+  #   truncate: true
+  # - name: acme.table2
+  #   db: db1
+  #   like: public.table2
+  # - name: table2
+  #   db: db2
+  #   state: absent
+  #   cascade: true
+
+
+postgresql_extensions:
+  - name: pg_stat_statements
+    db: db1
+    cascade: true
+    version: latest
+    schema: public
+  - name: citext
+    db: db1
+    state: absent
+
+
+postgresql_queries:
+  - query: SELECT version()
+    db: db1
+  - query:
+      - select * from public.table1
+    db: db1
+postgresql_scripts:
+  - path: /tmp/insert_in_table1.sql
+    db: db1
+
+postgresql_privs:
+  - roles: group1 # group1 and user1 are granted all privs on all object wihtin the public schema of the example db
+    db: db1
+    privs: ALL
+    objs: table1
+    type: table
+    # schema: public
+    grant_option: true
+  - roles: user2 # grant nreslou user all privs on nreslou database by first connecting to the postgres maintenance db
+    db: postgres
+    type: database
+    privs: ALL
+    objs: db1,db2
+    grant_option: true
+  # - roles: user1
+  #   db: db2
+  #   type: function
+  #   objs: add(int:int)
+  #   privs: ALL
+  #   grant_option: true
+
+postgresql_ownerships:
+  - db: db1
+    new_owner: user1
+    obj_name: table1
+    obj_type: table
+  # - db: db2 # reassign all dbs owned by user1 to user2 and all objects in db2 to user2
+  #   new_owner: user2
+  #   reassign_owned_by: user1
+
+
+# Allow ansible to setup postgresql backups when running
+postgresql_backup: true
+# Root directory containing the backups
+postgresql_backup_root_dir: /var/backups/postgresql
+postgresql_backup_mail_addr: admin@email.com
+postgresql_backup_schedule:
+  hour: 0
+  minute: 0
+# 3 days retentions for daily backups
+postgresql_backup_brdaily: 3
+# disable weekly and monthly backups
+postgresql_backup_doweekly: 0
+postgresql_backup_domonthly: 0
+# Weekly and monthly backups are disabled so these values don't really matter
+postgresql_backup_brweekly: 0
+postgresql_backup_brmontly: 0

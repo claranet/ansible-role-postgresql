@@ -1,0 +1,93 @@
+---
+- name: Manage databases.
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    lc_collate: "{{ item.lc_collate | default('en_US.UTF-8') }}"
+    lc_ctype: "{{ item.lc_ctype | default('en_US.UTF-8') }}"
+    encoding: "{{ item.encoding | default('UTF-8') }}"
+    template: "{{ item.template | default('template0') }}"
+    login_host: "{{ item.login_host | default('localhost') }}"
+    login_password: "{{ item.login_password | default(omit) }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    port: "{{ postgresql_port }}"
+    owner: "{{ item.owner | default(postgresql_user) }}"
+    state: "{{ item.state | default('present') }}"
+    # just to allow using all the options of the backing module
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    force: "{{ item.force | d(omit) }}"
+    target: "{{ item.target | d(omit) }}"
+    target_opts: "{{ item.target_opts | d(omit) }}"
+    maintenance_db: "{{ item.maintenance_db | d(omit) }}"
+    conn_limit: "{{ item.conn_limit | d(omit) }}"
+    tablespace: "{{ item.tablespace | d(omit) }}"
+    dump_extra_args: "{{ item.dump_extra_args | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_databases }}"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
+
+- name: Manage schemas.
+  community.postgresql.postgresql_schema:
+    db: "{{ item.db | d(omit) }}"
+    name: "{{ item.name | d(omit) }}"
+    owner: "{{ item.owner | d(omit) }}"
+    state: "{{ item.state | d(omit) }}"
+    cascade_drop: "{{ item.cascade_drop | d(omit) }}"
+
+    # login_host: "{{ item.login_host | default('localhost') }}"
+    # login_password: "{{ item.login_password | default(omit) }}"
+    port: "{{ postgresql_port }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    # usage of all options
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_schemas }}"
+  no_log: "{{ postgres_users_no_log }}"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
+
+- name: Manage tables.
+  community.postgresql.postgresql_table:
+    name: "{{ item.name }}"
+    db: "{{ item.db | d(omit) }}"
+    owner: "{{ item.owner | d(omit) }}"
+    columns: "{{ item.columns | d(omit) }}"
+    tablespace: "{{ item.tablespace | d(omit) }}"
+    unlogged: "{{ item.unlogged | d(omit) }}"
+    storage_params: "{{ item.storage_params | d(omit) }}"
+    like: "{{ item.like | d(omit) }}"
+    including: "{{ item.including | d(omit) }}"
+    rename: "{{ item.rename | d(omit) }}"
+    truncate: "{{ item.truncate | d(omit) }}"
+    state: "{{ item.state | d(omit) }}"
+    cascade: "{{ item.cascade | d(omit) }}"
+
+    # login_host: "{{ item.login_host | default('localhost') }}"
+    # login_password: "{{ item.login_password | default(omit) }}"
+    port: "{{ postgresql_port }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    # usage of all options
+    ssl_mode: "{{ item.ssl_mode | d(omit) }}"
+    ca_cert: "{{ item.ca_cert | d(omit) }}"
+    session_role: "{{ item.session_role | d(omit) }}"
+    trust_input: "{{ item.trust_input | d(omit) }}"
+  loop: "{{ postgresql_tables }}"
+  no_log: "{{ postgres_users_no_log }}"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  vars:
+    ansible_ssh_pipelining: true
+    ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"

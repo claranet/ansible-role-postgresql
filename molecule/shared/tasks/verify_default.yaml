@@ -1,0 +1,56 @@
+- name: Check if postgresql is installed or not
+  block:
+    - name: "Retrieve package facts"
+      ansible.builtin.package_facts:
+        manager: auto
+
+    # - name: show ansible_facts.packages
+    #   ansible.builtin.debug:
+    #     vars: ansible_facts.packages
+
+    # - ansible.builtin.meta: end_play
+
+    - name: Ensure postgresql server packages are installed
+      ansible.builtin.assert:
+        that:
+          - '"postgresql-{{ postgresql_version }}" in ansible_facts.packages or "postgresql{{ postgresql_version }}-server" in ansible_facts.packages'
+
+- name: Get service status on redhat like systems
+  ansible.builtin.systemd:
+    name: postgresql-{{ postgresql_version }}
+    state: started
+    enabled: true
+  register: postgresql_service_redhat
+  check_mode: true
+  when: ansible_os_family | lower == "redhat"
+
+- name: Get service status on debian like systems
+  ansible.builtin.systemd:
+    name: postgresql@{{ postgresql_version }}-main
+    state: started
+    enabled: true
+  register: postgresql_service_debian
+  check_mode: true
+  when: ansible_os_family | lower == "debian"
+
+- name: Set postgresql_service
+  ansible.builtin.set_fact:
+    postgresql_service: "{{ postgresql_service_redhat is skipped | ternary(postgresql_service_debian, postgresql_service_redhat) }}"
+
+- name: Ensure mariadb service is active and enabled
+  ansible.builtin.assert:
+    that:
+      - postgresql_service_debian is skipped or postgresql_service_debian is not changed
+      - postgresql_service_redhat is skipped or postgresql_service_redhat is not changed
+      # - postgresql_service.status.ActiveState == 'active'
+      # - postgresql_service.status.UnitFilePreset in ['enabled', 'enabled-runtime']
+      # - postgresql_service.status.UnitFileState in ['enabled', 'enabled-runtime']
+
+- name: Check if port 5432 is listening
+  ansible.builtin.wait_for:
+    port: 5432
+    delay: 5
+    timeout: 10
+    msg: "Timeout waiting for 5432 to respond"
+  register: port_check
+  ignore_errors: true

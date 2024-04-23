@@ -1,0 +1,33 @@
+---
+# - name: Set PostgreSQL environment variables.
+#   ansible.builtin.template:
+#     src: etc/profile.d/postgres.sh.j2
+#     dest: /etc/profile.d/postgres.sh
+#     mode: 0644
+#   notify: Restart postgresql
+
+- name: Ensure PostgreSQL data directory exists.
+  ansible.builtin.file:
+    path: "{{ _postgresql_data_dir }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    state: directory
+    mode: "0700"
+
+- name: Check if PostgreSQL database is initialized.
+  ansible.builtin.stat:
+    path: "{{ _postgresql_data_dir }}/PG_VERSION"
+  register: _postgresql_pgdata_dir_version_res
+
+- name: Include initialization tasks for os family {{ ansible_os_family | lower }}
+  when:
+    - ansible_os_family | lower in ['debian', 'redhat']
+  ansible.builtin.include_tasks: "{{ ansible_os_family | lower }}/initialize.yaml"
+
+- name: Ensure PostgreSQL log directory exists.
+  ansible.builtin.file:
+    path: "{{ postgresql_effective_log_dir }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    state: directory
+    mode: "0700"

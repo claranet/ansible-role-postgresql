@@ -1,0 +1,13 @@
+{%if not postgresql_hba_use_raw %}
+{{ ansible_managed | comment }}
+# PostgreSQL Client Authentication Configuration File
+# ===================================================
+#
+# See: https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
+
+{% for client in (postgresql_hba_entries + postgresql_hba_entries_extra + _postgresql_replication_hba_entries) %}
+{{ client.contype ~ '\t' }}{{ client.databases ~ '\t' }}{{ client.users ~ '\t' }}{{ client.address | default('') }} {{ client.ip_address|default('') }} {{ client.ip_mask|default('') }} {{ client.method ~ '\t' }}{{ client.auth_options|default('') }}
+{% endfor %}
+{% else %}
+{{ postgresql_hba_raw }}
+{% endif %}

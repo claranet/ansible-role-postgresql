@@ -1,0 +1,27 @@
+---
+- name: Create /var/backups/postgresql path
+  ansible.builtin.file:
+    path: "{{ postgresql_backup_root_dir }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: '0755'
+
+- name: Copy backup scripts if postgresql_backup
+  ansible.builtin.template:
+    src: autopostgresqlbackup.sh.j2
+    dest: "{{ postgresql_backup_script_dest }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: '0750'
+
+- name: Create the backup cron task
+  ansible.builtin.cron:
+    name: "{{ postgresql_backup_cron_job_name }}"
+    hour: "{{ postgresql_backup_schedule.hour | d(omit) }}"
+    minute: "{{ postgresql_backup_schedule.minute | d(omit) }}"
+    day: "{{ postgresql_backup_schedule.day | d(omit) }}"
+    weekday: "{{ postgresql_backup_schedule.weekday | d(omit) }}"
+    month: "{{ postgresql_backup_schedule.month | d(omit) }}"
+    user: "{{ postgresql_user }}"
+    job: "/bin/bash {{ postgresql_backup_script_dest }}"

@@ -1,0 +1,41 @@
+---
+- name: Add postgresql repository
+  ansible.builtin.template:
+    src: etc/apt/sources.list.d/pgdb.list.j2
+    dest: /etc/apt/sources.list.d/pgdg.list
+    owner: root
+    group: root
+    mode: "644"
+
+- name: Add postgreqsl repository signing key
+  ansible.builtin.uri:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    dest: /etc/apt/trusted.gpg.d/pgdb.asc
+    owner: root
+    group: root
+    mode: "644"
+    status_code: [200, 304]
+  environment: "{{ _postgresql_general_proxy_env }}"
+
+- name: Ensure PostgreSQL packages are installed.
+  ansible.builtin.apt:
+    name: "{{ _postgresql_packages }}"
+    state: present
+    update_cache: true
+  environment: "{{ _postgresql_pkg_proxy_env }}"
+  register: _postgresql_packages_installation_res
+
+- name: Ensure all configured locales are present.
+  community.general.locale_gen:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ postgresql_locales }}"
+  register: _postgresql_locale_gen_res
+
+- name: Drop the automatically created cluster after installation
+  ansible.builtin.command: /usr/bin/pg_dropcluster --stop {{ postgresql_version }} main
+  changed_when: true
+  when:
+    - _postgresql_packages_installation_res is changed
+    - _postgresql_bin_path ~ '/initdb -D' in _postgresql_packages_installation_res.stdout
+  tags: skip_ansible_lint
