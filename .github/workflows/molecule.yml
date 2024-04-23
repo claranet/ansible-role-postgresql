@@ -60,9 +60,6 @@ jobs:
         config:
           - name: centos
             image: "quay.io/centos/centos"
-            tag: "centos8"
-          - name: centos
-            image: "quay.io/centos/centos"
             tag: "stream8"
           - name: rocky8
             image: "rockylinux"
