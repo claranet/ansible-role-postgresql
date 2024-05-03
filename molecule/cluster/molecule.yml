@@ -41,6 +41,9 @@ provisioner:
   name: ansible
   env:
     ANSIBLE_FORCE_COLOR: "true"
+    ANSIBLE_LOAD_CALLBACK_PLUGINS: "true"
+    ANSIBLE_STDOUT_CALLBACK: "ansible.posix.debug"
+    ANSIBLE_CALLBACKS_ENABLED: "ansible.posix.profile_tasks"
   options:
     v: true
   ansible_args:
