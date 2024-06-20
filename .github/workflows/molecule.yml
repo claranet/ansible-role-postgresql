@@ -1,12 +1,10 @@
 ---
 name: Ansible Molecule
-
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   push:
     tags_ignore:
       - '*'
   pull_request:
-
 jobs:
   setup:
     name: Setup scenarios matrix
@@ -29,7 +27,6 @@ jobs:
           JSON="$JSON]"
 
           echo "::set-output name=scenarios::$(echo $JSON)"
-
   lint:
     name: Lint
     needs:
@@ -44,7 +41,6 @@ jobs:
         uses: ansible/ansible-lint-action@v6.17.0
         with:
           path: "."
-
   test:
     name: Scenario "${{ matrix.scenario }}", pg-${{ matrix.postgresql_version }} on ${{ matrix.config.image }}:${{ matrix.config.tag }}
     needs:
@@ -82,7 +78,8 @@ jobs:
           - name: ubuntu22
             image: "ubuntu"
             tag: "22.04"
-
+          - image: ubuntu
+            tag: "24.04"
     steps:
       - name: checkout
         uses: actions/checkout@v3
