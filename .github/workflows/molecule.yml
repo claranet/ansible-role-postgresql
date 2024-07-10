@@ -58,9 +58,6 @@ jobs:
         postgresql_version:
           - 15
         config:
-          - name: centos
-            image: "quay.io/centos/centos"
-            tag: "stream8"
           - name: rocky8
             image: "rockylinux"
             tag: "8.7"
