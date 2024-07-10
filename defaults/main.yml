@@ -30,7 +30,10 @@ postgresql_shared_preload_libraries:
 postgresql_auth_method: "{{ ansible_fips | ternary('scram-sha-256', 'md5') }}"
 # PostgreSQL unix_socket_directories config parameter
 postgresql_unix_socket_directories:
-  - /var/run/postgresql
+  - /run/postgresql
+# Permissions for the PostgreSQL unix sockets (default is distro dependant)
+postgresql_unix_socket_directories_mode: ''
+
 
 # Global configuration options that will be set in postgresql.conf.
 postgresql_global_config_options:
@@ -52,6 +55,22 @@ postgresql_global_config_options:
     value: "{{ postgresql_max_connections }}"
 # Extra configuration options that are always inserted inside postgresql.conf
 postgresql_global_config_options_extra: []
+# Actual postgresql log directory
+postgresql_log_dir: "{{ ((postgresql_global_config_options + postgresql_global_config_options_extra) | items2dict(key_name='option', value_name='value')).log_directory }}"
+postgresql_effective_log_dir: "{{ postgresql_log_dir is match('/') | ternary(postgresql_log_dir, _postgresql_data_dir ~ '/' ~ postgresql_log_dir) }}"
+# Permissions for the postgresql log directory
+postgresql_log_directory_mode: '0700'
+# Whether or not to create a tmpfiles.d postgresql file to persist permissions on unix socket directories and log directories accross system rebbots 
+postgresql_persist_permissions: true
+# Path to the template used by Ansible to create the tempfile conf to persist permissions 
+# You can update this path to a custom file to completely customize the persisting rules
+postgresql_tempfile_src_template_path: etc/tmpfiles.d/postgresql-common.conf.j2
+# Destination path for the tempfile configuration
+postgresql_tempfile_dest_path: /etc/tmpfiles.d/postgresql-common.conf
+# File permissions and owner/group of the postgresql tempfile configuration
+postgresql_tempfile_mode: '0644'
+postgresql_tempfile_owner: root
+postgresql_tempfile_group: root
 
 # Host based authentication (hba) entries to be added to the pg_hba.conf. This
 # variable's defaults reflect the defaults that come with a fresh installation.
@@ -197,15 +216,9 @@ postgresql_replication_create_slot: true
 postgresql_replication_primary_inventory_name: ""
 # ip addresses/dns names used to generate replication hba entries that allow replicas to connect to the primary server
 postgresql_replication_replica_addresses: []
-# User provided replication specific hba rules
+# User provided replication specific hba rules, if empty the role will automatically create the rules to autorize each replica 
+# Check _postgresql_replication_hba_entries variable in vars/main.yml
 postgresql_replication_hba_entries: []
-# Private replication specific HBA entries
-_postgresql_replication_hba_entries: "{{ postgresql_replication_hba_entries }}"
-  # - contype: host
-  #   databases: replication
-  #   users: "{{ postgresql_replication_user }}"
-  #   address: "{{ postgresql_replication_replica_address }}"
-  #   method: "{{ postgresql_replication_auth_method }}"
 # Authentication method specific for the replica hosts
 postgresql_replication_auth_method: "{{ postgresql_auth_method }}"
 # --checkpoint parameter value of the pg_basebackup command
@@ -300,16 +313,13 @@ postgresql_backup_perm: "600"
 
 
 # Proxy variables
+# These variables are combined into dictionnaries (_postgresql_general_proxy_env and _postgresql_pkg_proxy_env) to provide proxy variables to appropriate tasks.
 # HTTP and HTTPS proxy to use for general internet access on the MariaDB server
 postgresql_http_general_proxy: ''
 postgresql_https_general_proxy: ''
-# Env var used to provide the proxies to 'internet' tasks
-_postgresql_general_proxy_env: {}
 # HTTP and HTTPS proxy to use for package manager interaction (such as downloading packages, updating cache, etc) on the postgresql server
 postgresql_http_pkg_proxy: ''
 postgresql_https_pkg_proxy: ''
-# Env var used to provide specified proxies to package manager tasks
-_postgresql_pkg_proxy_env: {}
 
 
 # Confirm twice that postgresql should be uninstalled

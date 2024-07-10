@@ -12,10 +12,23 @@ _postgresql_dependencies_pip_packages:
   - ipaddress # needed by the postgresql_pg_hba module
   # - pg_activity[psycopg]
 
+# Private replication specific HBA entries
+_postgresql_replication_hba_entries: "{{ postgresql_replication_hba_entries }}"
+  # - contype: host
+  #   databases: replication
+  #   users: "{{ postgresql_replication_user }}"
+  #   address: "{{ postgresql_replication_replica_address }}"
+  #   method: "{{ postgresql_replication_auth_method }}"
+
+# Env var used to provide the proxies to 'internet' tasks
+_postgresql_general_proxy_env: {}
+# Env var used to provide specified proxies to package manager tasks
+_postgresql_pkg_proxy_env: {}
+
 _postgresql_apt_mirror_url: http://apt.postgresql.org/pub/repos/apt
 _postgresql_repo_rpm_url: "https://download.postgresql.org/pub/repos/yum/reporpms/{{ (ansible_distro == 'fedora') | ternary('F', 'EL') }}-{{ ansible_distribution_major_version }}-x86_64/pgdg-{{ (ansible_distro == 'fedora') | ternary('fedora', 'redhat') }}-repo-latest.noarch.rpm"
-_postgresql_unix_socket_directories_mode: "{{ postgresql_unix_socket_directories_mode | d('02775', true) }}"
+_postgresql_unix_socket_directories_mode: "{{ postgresql_unix_socket_directories_mode | d('2775', true) }}"
 _postgresql_service_path: "{{ postgresql_service_path | d('', true) }}"
-_postgresql_virtualenv_path: ~/.venv.claranet.postgresql
+_postgresql_virtualenv_path: "{{ _postgresql_user_home_dir | d('~', true) }}/.venv.claranet.postgresql"
 _postgresql_ansible_python_interpreter: "{{ _postgresql_virtualenv_path }}/bin/python"
 _postgresql_pythonized_path: "{{ ansible_env.PATH }}:{{ _postgresql_bin_path }}:{{ _postgresql_virtualenv_path }}/bin"

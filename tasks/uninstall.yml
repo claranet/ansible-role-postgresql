@@ -1,10 +1,8 @@
 ---
-- name: Remove pip dependencies
-  ansible.builtin.pip:
-    name: "{{ _postgresql_dependencies_pip_packages }}"
+- name: Drop virtual environment with pip dependencies
+  ansible.builtin.file:
+    path: "{{ _postgresql_virtualenv_path }}"
     state: absent
-  environment:
-    PATH: "{{ ansible_env.PATH }}:{{ _postgresql_bin_path }}"
 
 - name: Remove backup directory
   ansible.builtin.file:
@@ -22,13 +20,19 @@
     state: stopped
     enabled: false
 
-- name: Import tasks (debian/uninstall.yaml)
-  ansible.builtin.import_tasks: debian/uninstall.yaml
+- name: Import tasks (debian/uninstall.yml)
+  ansible.builtin.import_tasks: debian/uninstall.yml
   when: ansible_os_family | lower == "debian"
 
-- name: Import tasks (redhat/uninstall.yaml)
-  ansible.builtin.import_tasks: redhat/uninstall.yaml
+- name: Import tasks (redhat/uninstall.yml)
+  ansible.builtin.import_tasks: redhat/uninstall.yml
   when: ansible_os_family | lower == "redhat"
+
+- name: Delete the permissions tmpfiles.d config
+  ansible.builtin.file:
+    path: "{{ postgresql_tempfile_dest_path }}"
+    state: absent
+  when: postgresql_persist_permissions
 
 - name: Delete data dir
   ansible.builtin.file:

@@ -25,18 +25,19 @@ Install and configure PostgreSQL server on Debian and RedHat systems using this 
     - [Auto tuning](#auto-tuning)
     - [Physical replication](#physical-replication)
     - [Backup setup](#backup)
-    - [User and Database Management](#createremove-database-users)
+    - [User and database management](#createremove-database-users)
     - [Tablespaces management](#tablespaces)
     - [Databases management](#createremove-databases)
     - [Ownership and privileges management](#manage-ownership-and-privileges)
-    - [Extensions Management](#extensions-management)
-    - [SQL Executions](#sql-executions)
-    - [Advanced Customized Installation](#advanced-customized-installation)
-9. [Full Example Playbook](#pencil2-full-example-playbook)
+    - [Extensions management](#extensions-management)
+    - [SQL executions](#sql-executions)
+    - [Advanced customized installation](#advanced-customized-installation)
+    - [Uninstallation](#uninstallation)
+9. [Full example playbook](#pencil2-full-example-playbook)
 10. [Hardening](HARDENING.md)
 11. [Contributing](CONTRIBUTING.md)
 12. [License](LICENSE)
-13. [Author Information](#author-information)
+13. [Author information](#author-information)
 
 ## :warning: Requirements
 
@@ -520,11 +521,30 @@ postgresql_service_state: started
 # Whether or not to enable the postgresql service after installation
 postgresql_service_enabled: true
 # PostgreSQL unix_socket_directories config parameter
-postgresql_unix_socket_directories: [/var/run/postgresql]
+postgresql_unix_socket_directories: [/run/postgresql]
+
+# Permissions for the PostgreSQL unix sockets (default is distro dependant)
+postgresql_unix_socket_directories_mode: ''
+
+# Permissions for the postgresql log directory
+postgresql_log_directory_mode: '0700'
+# Whether or not to create a tmpfiles.d postgresql file to persist permissions on unix socket directories and log directories accross system rebbots 
+postgresql_persist_permissions: true
+# Path to the template used by Ansible to create the tempfile conf to persist permissions 
+# You can update this path to a custom file to completely customize the persisting rules
+postgresql_tempfile_src_template_path: etc/tmpfiles.d/postgresql-common.conf.j2
+# Destination path for the tempfile configuration
+postgresql_tempfile_dest_path: /etc/tmpfiles.d/postgresql-common.conf
+# File permissions and owner/group of the postgresql tempfile configuration
+postgresql_tempfile_mode: '0644'
+postgresql_tempfile_owner: root
+postgresql_tempfile_group: root
 
 ```
 
-If you want to uninstall a Postgresql installation with this role, set to `true` the  variables `postgresql_uninstall_1, postgresql_uninstall_1` and use the corresponding tag.
+### Uninstallation
+
+If you want to uninstall a Postgresql installation with this role, set both variables `postgresql_uninstall_1`, `postgresql_uninstall_1` to `true` and use the corresponding tag (`uninstallation`).
 
 ## :pencil2: Full Example Playbook
 
@@ -653,8 +673,8 @@ If you want to uninstall a Postgresql installation with this role, set to `true`
         db: db1
         columns: waste_id int
         unlogged: true
-        # like: public.table1
-        # including: comments, indexes
+      #   like: public.table1
+      #   including: comments, indexes
       # - name: table2
       #   db: db1
       #   truncate: true

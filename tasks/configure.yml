@@ -9,7 +9,6 @@
   loop: "{{ postgresql_autotune_config_options |
     community.general.lists_mergeby(postgresql_global_config_options, 'option') |
     community.general.lists_mergeby(postgresql_global_config_options_extra, 'option') }}"
-  # diff: true
   notify: Restart postgresql
 
 - name: Configure host based authentication (if entries are configured).
@@ -38,6 +37,15 @@
     group: "{{ postgresql_group }}"
     mode: "{{ _postgresql_unix_socket_directories_mode }}"
   loop: "{{ postgresql_unix_socket_directories }}"
+
+- name: Ensure PostgreSQL permissions are persisted accross reboots
+  ansible.builtin.template:
+    src: "{{ postgresql_tempfile_src_template_path }}"
+    dest: "{{ postgresql_tempfile_dest_path }}"
+    owner: "{{ postgresql_tempfile_owner }}"
+    group: "{{ postgresql_tempfile_group }}"
+    mode: "{{ postgresql_tempfile_mode }}"
+  when: postgresql_persist_permissions
 
 - name: Set postgresql service enabled state
   ansible.builtin.service:

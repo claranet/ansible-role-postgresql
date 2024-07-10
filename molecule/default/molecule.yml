@@ -10,7 +10,8 @@ platforms:
   # On "${name:-${image:-debian}", the last brace does not miss, it works like that...
   # The env var should be used when the image variable refers to a full registry path like registry.access.redhat.com/ubi8/ubi
   - &default
-    name: claranet_postgresql_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}${postgresql_version}
+    # name: claranet_postgresql_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}${postgresql_version}
+    name: claranet-postgresql-default-latest
     image: ${image:-debian}:${tag:-latest}
     privileged: true
     tty: true

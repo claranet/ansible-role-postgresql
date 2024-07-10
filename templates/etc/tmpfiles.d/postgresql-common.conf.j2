@@ -1,0 +1,8 @@
+{{ ansible_managed | comment }}
+# Directory for PostgreSQL sockets, lockfiles and stats tempfiles
+# d /run/postgresql 2775 postgres postgres - -
+{% for item in postgresql_unix_socket_directories %}
+d {{ item }} {{ _postgresql_unix_socket_directories_mode }} {{ postgresql_user }} {{ postgresql_group }} - -
+{% endfor %}
+# Log directory
+d {{ postgresql_effective_log_dir }} 1775 {{ postgresql_user }} {{ postgresql_group }} - -
