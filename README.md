@@ -86,6 +86,7 @@ Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes
 Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes 
 Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
 Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
+Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
 RockyLinux 8.7    | Yes  | Yes  | Yes  | Yes  |  Yes 
 RockyLinux 9.1    | Yes  | Yes  | Yes  | Yes  |  Yes 
 Fedora 38         | No   | No   | No   | No   |  No  
