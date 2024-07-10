@@ -543,7 +543,7 @@ postgresql_tempfile_group: root
 ```
 
 ### Uninstallation
-
+----
 If you want to uninstall a Postgresql installation with this role, set both variables `postgresql_uninstall_1`, `postgresql_uninstall_1` to `true` and use the corresponding tag (`uninstallation`).
 
 ## :pencil2: Full Example Playbook
