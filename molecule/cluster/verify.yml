@@ -11,8 +11,6 @@
   hosts: replica
   tags: always
   become: true
-#   vars:
-#     postgresql_version: 14
 
   tasks:
     - name: Retrieve databases on replica nodes
@@ -27,10 +25,6 @@
       ansible.builtin.assert:
         that: item in databases.stdout_lines
       loop: [db1]
-
-#     - name: Retrieve replication status
-
-#     - name: Assert that replication is working
 
     - name: Remove test database from primary
       ansible.builtin.command: dropdb db2

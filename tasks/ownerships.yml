@@ -7,13 +7,9 @@
     obj_type: "{{ item.obj_type | d(omit) }}"
     reassign_owned_by: "{{ item.reassign_owned_by | d(omit) }}"
     fail_on_role: "{{ item.fail_on_role | d(omit) }}"
-
-    # login_host: "{{ item.login_host | default('localhost') }}"
-    # login_password: "{{ item.login_password | default(omit) }}"
     port: "{{ postgresql_port }}"
     login_user: "{{ item.login_user | default(postgresql_user) }}"
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    # usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"
@@ -38,15 +34,9 @@
     db: "{{ item.db | d(omit) }}"
     target_roles: "{{ item.target_roles | d(omit) }}"
     state: "{{ item.state | default('present') }}"
-
-
-    # login_host: "{{ item.login_host | default('localhost') }}"
-    # login_password: "{{ item.login_password | default(omit) }}"
     port: "{{ postgresql_port }}"
     login_user: "{{ item.login_user | default(postgresql_user) }}"
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    # db: "{{ item.db | default(omit) }}"
-    # usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     fail_on_role: "{{ item.fail_on_user | d(omit) }}"

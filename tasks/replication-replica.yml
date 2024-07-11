@@ -16,7 +16,6 @@
     path: "{{ _postgresql_data_dir }}/recovery.conf"
   register: _postgresql_recovery_conf
   when: postgresql_version is version('12', '<')
-  # when: postgresql_version | float < 12
 
 - name: Debug replication status checks
   ansible.builtin.debug:

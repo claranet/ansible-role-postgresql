@@ -19,7 +19,7 @@
   ansible.builtin.uri:
     url: "{{ postgresql_autotune_url }}"
     return_content: true
-  # check cases where pgconfig
+  # TODO: check cases where pgconfig might be offline
   environment: "{{ _postgresql_general_proxy_env }}"
   register: _postgresql_autotune_res
 

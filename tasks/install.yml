@@ -27,7 +27,6 @@
         - "{{ ansible_pkg_mgr }}/install.yml"
       skip: true
 
-
 - name: Retrieve postgresql user's info
   ansible.builtin.getent:
     database: passwd
