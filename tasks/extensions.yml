@@ -10,7 +10,6 @@
     port: "{{ postgresql_port }}"
     state: "{{ item.state | d('present') }}"
     schema: "{{ item.schema | d('public') }}"
-    # allow usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"

@@ -10,22 +10,31 @@
       ansible_distribution_major_version: "{{ ansible_distribution_major_version }}"
       ansible_distribution_release: "{{ ansible_distribution_release }}"
 
-- name: Import tasks (debian/install.yaml)
-  ansible.builtin.import_tasks: debian/install.yaml
+- name: Import tasks (debian/install.yml)
+  ansible.builtin.import_tasks: debian/install.yml
   when: ansible_os_family | lower == "debian"
 
-- name: Import tasks (redhat/install.yaml)
-  ansible.builtin.import_tasks: redhat/install.yaml
+- name: Import tasks (redhat/install.yml)
+  ansible.builtin.import_tasks: redhat/install.yml
   when: ansible_os_family | lower == "redhat"
 
-- name: Include {{ ansible_pkg_mgr + '/install.yaml' }}
+- name: Include {{ ansible_pkg_mgr + '/install.yml' }}
   ansible.builtin.include_tasks: "{{ item }}"
   loop: "{{ query('first_found', params) }}"
   vars:
     params:
       files:
-        - "{{ ansible_pkg_mgr }}/install.yaml"
+        - "{{ ansible_pkg_mgr }}/install.yml"
       skip: true
+
+- name: Retrieve postgresql user's info
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ postgresql_user }}"
+
+- name: Set fact for postgresql user's home directory
+  ansible.builtin.set_fact:
+    _postgresql_user_home_dir: "{{ ansible_facts.getent_passwd[postgresql_user][4] }}"
 
 - name: Create a dedicated virtual env for postgresql related libraries
   ansible.builtin.pip:

@@ -13,7 +13,6 @@
     port: "{{ postgresql_port }}"
     owner: "{{ item.owner | default(postgresql_user) }}"
     state: "{{ item.state | default('present') }}"
-    # just to allow using all the options of the backing module
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"
@@ -39,13 +38,9 @@
     owner: "{{ item.owner | d(omit) }}"
     state: "{{ item.state | d(omit) }}"
     cascade_drop: "{{ item.cascade_drop | d(omit) }}"
-
-    # login_host: "{{ item.login_host | default('localhost') }}"
-    # login_password: "{{ item.login_password | default(omit) }}"
     port: "{{ postgresql_port }}"
     login_user: "{{ item.login_user | default(postgresql_user) }}"
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    # usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"
@@ -73,13 +68,9 @@
     truncate: "{{ item.truncate | d(omit) }}"
     state: "{{ item.state | d(omit) }}"
     cascade: "{{ item.cascade | d(omit) }}"
-
-    # login_host: "{{ item.login_host | default('localhost') }}"
-    # login_password: "{{ item.login_password | default(omit) }}"
     port: "{{ postgresql_port }}"
     login_user: "{{ item.login_user | default(postgresql_user) }}"
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    # usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"

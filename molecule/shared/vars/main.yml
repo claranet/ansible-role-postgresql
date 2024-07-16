@@ -9,6 +9,8 @@ postgresql_max_connections: 100
 postgresql_global_config_options_extra:
   - option: log_statement
     value: all
+  - option: logging_collector
+    value: on
 postgresql_hba_entries_extra: []
   # - {contype: local, databases: all, users: postgres, method: peer}
 

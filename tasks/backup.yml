@@ -1,5 +1,5 @@
 ---
-- name: Create /var/backups/postgresql path
+- name: Create backups directory path
   ansible.builtin.file:
     path: "{{ postgresql_backup_root_dir }}"
     state: directory

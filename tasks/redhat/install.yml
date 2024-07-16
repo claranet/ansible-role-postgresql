@@ -61,8 +61,3 @@
     exclude: python-unversioned-command
     update_cache: true
   environment: "{{ _postgresql_pkg_proxy_env }}"
-
-# - name: Install locales packages
-#   ansible.builtin.dnf:
-#     name: "{{ postgresql_locale_packages }}"
-#     state: present

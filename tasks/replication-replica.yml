@@ -3,7 +3,7 @@
   community.postgresql.postgresql_query:
     query: select * from pg_stat_wal_receiver
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    port: "{{ postresql_port | default(omit) }}"
+    port: "{{ postgresql_port | default(omit) }}"
   register: _postgresql_replication_check
   become: true
   become_user: "{{ postgresql_user }}"
@@ -16,7 +16,6 @@
     path: "{{ _postgresql_data_dir }}/recovery.conf"
   register: _postgresql_recovery_conf
   when: postgresql_version is version('12', '<')
-  # when: postgresql_version | float < 12
 
 - name: Debug replication status checks
   ansible.builtin.debug:

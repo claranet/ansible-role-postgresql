@@ -4,4 +4,4 @@
 
   tasks:
     - name: Include default verification
-      ansible.builtin.include_tasks: tasks/verify_default.yaml
+      ansible.builtin.include_tasks: tasks/verify_default.yml

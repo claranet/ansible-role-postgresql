@@ -1,54 +1,48 @@
 ---
-- name: Ensure PostgreSQL users are configured correctly.
-  community.postgresql.postgresql_user:
-    name: "{{ item.name }}"
-    password: "{{ item.password | default(omit) }}"
+- name: Manage objects ownerships.
+  community.postgresql.postgresql_owner:
+    db: "{{ item.db | d(omit) }}"
+    new_owner: "{{ item.new_owner | d(omit) }}"
+    obj_name: "{{ item.obj_name | d(omit) }}"
+    obj_type: "{{ item.obj_type | d(omit) }}"
+    reassign_owned_by: "{{ item.reassign_owned_by | d(omit) }}"
+    fail_on_role: "{{ item.fail_on_role | d(omit) }}"
     port: "{{ postgresql_port }}"
-    # login_host: "{{ item.login_host | default('localhost') }}"
-    # login_password: "{{ item.login_password | default(omit) }}"
     login_user: "{{ item.login_user | default(postgresql_user) }}"
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    encrypted: "{{ item.encrypted | default(omit) }}"
-    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
-    db: "{{ item.db | default(omit) }}"
-    state: "{{ item.state | default('present') }}"
-    # usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
-    fail_on_user: "{{ item.fail_on_user | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"
-    expires: "{{ item.expires | d(omit) }}"
-    no_password_changes: "{{ item.no_password_changes | d(omit) }}"
-    conn_limit: "{{ item.conn_limit | d(omit) }}"
-    comment: "{{ item.comment | d(omit) }}"
     trust_input: "{{ item.trust_input | d(omit) }}"
-  loop: "{{ postgresql_users }}"
+  loop: "{{ postgresql_ownerships }}"
   no_log: "{{ postgres_users_no_log }}"
   become: true
   become_user: "{{ postgresql_user }}"
-  environment:
-    PGOPTIONS: "{{ (postgresql_auth_method == 'scram-sha-256') | ternary('-c password_encryption=scram-sha-256', '') }}"
   vars:
     ansible_ssh_pipelining: true
     ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
 
 
-- name: Manage PostgreSQL memberships.
-  community.postgresql.postgresql_membership:
-    groups: "{{ item.groups }}"
-    target_roles: "{{ item.target_roles }}"
+- name: Manage PostgreSQL privileges.
+  community.postgresql.postgresql_privs:
+    roles: "{{ item.roles }}"
+    privs: "{{ item.privs | d(omit) }}"
+    type: "{{ item.type | d(omit) }}"
+    objs: "{{ item.objs | d(omit) }}"
+    schema: "{{ item.schema | d(omit) }}"
+    grant_option: "{{ item.grant_option | d(omit) }}"
+    db: "{{ item.db | d(omit) }}"
+    target_roles: "{{ item.target_roles | d(omit) }}"
     state: "{{ item.state | default('present') }}"
     port: "{{ postgresql_port }}"
     login_user: "{{ item.login_user | default(postgresql_user) }}"
     login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    db: "{{ item.db | default(omit) }}"
-    # usage of all options
     ssl_mode: "{{ item.ssl_mode | d(omit) }}"
     ca_cert: "{{ item.ca_cert | d(omit) }}"
     fail_on_role: "{{ item.fail_on_user | d(omit) }}"
     session_role: "{{ item.session_role | d(omit) }}"
     trust_input: "{{ item.trust_input | d(omit) }}"
-  loop: "{{ postgresql_memberships }}"
+  loop: "{{ postgresql_privs }}"
   no_log: "{{ postgres_users_no_log }}"
   become: true
   become_user: "{{ postgresql_user }}"
