@@ -1,0 +1,19 @@
+[Unit]
+Description=Manage (disable) Transparent Huge Pages state (THP)
+DefaultDependencies=no
+After=sysinit.target local-fs.target
+Before={{ _postgresql_daemon }}.service
+
+[Service]
+Type=oneshot
+Environment=THP_PATH={{ _postgresql_thp_kernel_path }}
+Environment=THP_STATE={{ postgresql_thp_state }}
+Environment=THP_DEFRAG_STATE={{ postgresql_thp_defrag_state }}
+ExecStart=/bin/bash -c '\
+file=$THP_PATH/enabled \
+if [[ -f $file && ! $(cat $file) =~ \\[${THP_STATE}\\] ]]; then echo $THP_STATE > $file; fi; \
+file=$THP_PATH/defrag \
+if [[ -f $file && ! $(cat $file) =~ \\[${THP_DEFRAG_STATE}\\] ]]; then echo $THP_DEFRAG_STATE > $file; fi;'
+
+[Install]
+WantedBy=basic.target

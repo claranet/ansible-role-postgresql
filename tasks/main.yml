@@ -4,6 +4,17 @@
   ansible.builtin.import_tasks: setup-vars.yml
   tags: always
 
+# TODO
+- name: Import THP management tasks
+  ansible.builtin.import_tasks: transparent-hugepages.yml
+  when: postgresql_thp_manage
+  tags:
+    - thp
+    - hugepage
+    - hugepages
+    - transparent-hugepage
+    - transparent-hugepages
+
 - name: Include uninstallation tasks
   ansible.builtin.include_tasks:
     file: uninstall.yml

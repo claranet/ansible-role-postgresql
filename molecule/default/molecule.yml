@@ -37,12 +37,13 @@ provisioner:
     v: true
   ansible_args:
     - -v
-    - --tags=always,uninstall,install,init,autotune,config,repli,backup,user,tablespace,db,owner,ext,query
+    - --tags=always,uninstall,thp,install,init,autotune,config,repli,backup,user,tablespace,db,owner,ext,query
   inventory:
     group_vars:
       all:
         postgresql_debug: true
         postgresql_version: ${postgresql_version:-15}
+        postgresql_thp_manage: true
 
 
 verifier:

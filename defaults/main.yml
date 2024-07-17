@@ -325,3 +325,12 @@ postgresql_https_pkg_proxy: ''
 # Confirm twice that postgresql should be uninstalled
 postgresql_uninstall_1: false
 postgresql_uninstall_2: false
+
+
+# Transparent hugepages management
+postgresql_thp_manage: false
+postgresql_thp_disable: true
+postgresql_thp_persistent_state: true
+# Only supported are always,never,madvise
+postgresql_thp_state: "{{ postgresql_thp_disable | ternary('never', 'always') }}"
+postgresql_thp_defrag_state: "{{ postgresql_thp_state }}"
