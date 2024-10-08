@@ -1,0 +1,35 @@
+---
+- name: Create script directory path
+  ansible.builtin.file:
+    path: "{{ postgresql_vacuum_script_dir }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: '0755'
+
+- name: Create script log directory
+  ansible.builtin.file:
+    path: "{{ postgresql_vacuum_log_dir }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: '0755'
+
+- name: Copy vacuum scripts if postgresql_vacuum
+  ansible.builtin.template:
+    src: pgsql_vacuumDB.sh.j2
+    dest: "{{ postgresql_vacuum_script_dest }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: '0750'
+
+- name: Create the vacuum cron task
+  ansible.builtin.cron:
+    name: "{{ postgresql_vacuum_cron_job_name }}"
+    hour: "{{ postgresql_vacuum_schedule.hour | d(omit) }}"
+    minute: "{{ postgresql_vacuum_schedule.minute | d(omit) }}"
+    day: "{{ postgresql_vacuum_schedule.day | d(omit) }}"
+    weekday: "{{ postgresql_vacuum_schedule.weekday | d(omit) }}"
+    month: "{{ postgresql_vacuum_schedule.month | d(omit) }}"
+    user: "{{ postgresql_user }}"
+    job: "{{ postgresql_vacuum_script_dest }} {{postgresql_vacuum_option}}"

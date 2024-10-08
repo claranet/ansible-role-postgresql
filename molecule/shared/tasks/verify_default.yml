@@ -37,7 +37,7 @@
   ansible.builtin.set_fact:
     postgresql_service: "{{ postgresql_service_redhat is skipped | ternary(postgresql_service_debian, postgresql_service_redhat) }}"
 
-- name: Ensure mariadb service is active and enabled
+- name: Ensure postgresqL service is active and enabled
   ansible.builtin.assert:
     that:
       - postgresql_service_debian is skipped or postgresql_service_debian is not changed
@@ -54,3 +54,13 @@
     msg: "Timeout waiting for 5432 to respond"
   register: port_check
   ignore_errors: true
+
+- name: Check if vacuum script works
+  ansible.builtin.command: /var/scripts/pgsql_vacuumDB.sh vacuumanalyze
+  become: true
+  become_user: postgres
+
+- name: Check min last vacuum date
+  ansible.builtin.command: psql db1 -c "select min(last_vacuum) from pg_stat_user_tables;"
+  become: true
+  become_user: postgres

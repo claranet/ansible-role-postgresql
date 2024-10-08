@@ -27,7 +27,7 @@
       http_proxy: "{{ postgresql_http_pkg_proxy | d(omit, true) }}"
       https_proxy: "{{ postgresql_https_pkg_proxy | d(omit, true) }}"
 
-- name: Add relication hba rules
+- name: Add replication hba rules
   ansible.builtin.set_fact:
     _postgresql_replication_hba_entries: "{{ _postgresql_replication_hba_entries | d([]) +
       [{'contype': 'host', 'databases': 'replication', 'users': postgresql_replication_user, 'address': item, 'method': postgresql_replication_auth_method}]
