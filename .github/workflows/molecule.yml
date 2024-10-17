@@ -65,9 +65,6 @@ jobs:
           - name: rocky9
             image: "rockylinux"
             tag: "9.1"
-          - name: debian10
-            image: "debian"
-            tag: "10"
           - name: debian11
             image: "debian"
             tag: "11"
