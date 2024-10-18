@@ -27,7 +27,6 @@ jobs:
 
           JSON="${JSON%?}"
           JSON="$JSON]"
-
           echo "::set-output name=scenarios::$(echo $JSON)"
 
   lint:
