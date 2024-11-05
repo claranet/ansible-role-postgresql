@@ -1,21 +1,16 @@
 ---
-- name: Create script directory path
+- name: Create script and log directory
   ansible.builtin.file:
-    path: "{{ postgresql_vacuum_script_dir }}"
+    path: "{{ item }}"
     state: directory
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     mode: '0755'
+  loop:
+    - "{{ postgresql_vacuum_script_dir }}"
+    - "{{ postgresql_vacuum_log_dir }}"
 
-- name: Create script log directory
-  ansible.builtin.file:
-    path: "{{ postgresql_vacuum_log_dir }}"
-    state: directory
-    owner: "{{ postgresql_user }}"
-    group: "{{ postgresql_group }}"
-    mode: '0755'
-
-- name: Copy vacuum scripts if postgresql_vacuum
+- name: Copy vacuum scripts
   ansible.builtin.template:
     src: pgsql_vacuumDB.sh.j2
     dest: "{{ postgresql_vacuum_script_dest }}"
@@ -32,4 +27,4 @@
     weekday: "{{ postgresql_vacuum_schedule.weekday | d(omit) }}"
     month: "{{ postgresql_vacuum_schedule.month | d(omit) }}"
     user: "{{ postgresql_user }}"
-    job: "{{ postgresql_vacuum_script_dest }} {{postgresql_vacuum_option}}"
+    job: "{{ postgresql_vacuum_script_dest }} {{ postgresql_vacuum_option }}"
