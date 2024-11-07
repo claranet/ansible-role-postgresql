@@ -48,7 +48,7 @@ provisioner:
     v: true
   ansible_args:
     - -v
-    - --tags=always,uninstall,install,init,autotune,config,repli,backup,user,tablespace,db,owner,ext,query
+    - --tags=always,uninstall,install,init,autotune,config,repli,backup,vacuum,user,tablespace,db,owner,ext,query
   inventory:
     group_vars:
       all:

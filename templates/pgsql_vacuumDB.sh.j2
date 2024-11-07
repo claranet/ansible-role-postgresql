@@ -1,0 +1,173 @@
+#!/bin/bash                                                                                                                             
+## pgsql_VacuumDB.sh                                                                                                                                                                                                                                                                                                                                                                                  
+##                                                                                                                                    
+## Vaccum DB postgresql                                                                                                                                                                                                       
+##                                                                                                                                    
+################################################################################                                                      
+
+### Declaration des variables
+METHOD=$1
+shift
+
+PGHOME="/usr"
+PORT={{ postgresql_port }}
+SCRIPT_LOG_DIR={{ postgresql_vacuum_log_dir }}
+MAILADDR="{{ postgresql_vacuum_mail_addr }}"
+NAME="PostgreSQLVacuum"
+
+############################################################
+# Help                                                     #
+############################################################
+Help()
+{
+  # Display Help
+  echo " Usage:
+  Syntax: pgsql_vacuumDB.sh [vacuumanalyze|vacuumfull|vacuumonly|analyzeonly] 
+  Options:
+  -h,--help:        Prints this help message
+  -s,--host:        host 
+  -p,--port:        port (default : 5432)
+  -u,--user:        user                
+  -d,--database:    The single database to vacuum (default : all databases)
+  -H,--pghome
+  -x,--debug
+  -v,--verbose
+  -l,--logdirectory
+  "
+  exit 1
+}
+
+# Password
+# create a file ${HOME}/.pgpass containing a line like this
+#   hostname:*:*:dbuser:dbpass
+# replace hostname with the value of DBHOST and postgres with
+# the value of USERNAME
+
+exit_abnormal() {
+  Help
+  exit 1
+}
+
+LogInfo() {
+    local timestamp=`date "+%Y_%m_%d__%H:%M:%S"`
+    echo ${timestamp} "$1" >> ${SCRIPT_LOG_FILE}
+    echo ${timestamp} "$1"
+}
+
+function check_return_code {
+  status="$1"
+  LogInfo "Return Code : ${status}"
+  if [ $status -ne 0 ]
+  then
+    LogInfo "command failed"
+    echo "Command failed"
+    exit 1
+  fi
+}
+
+############################################################
+# Process the input options. Add options as needed.        #
+############################################################
+# Get the options
+args=$(getopt -a -o hp:H:u:xvl:d: --long help,host:,port:,user:,database:,pghome:,debug,verbose,logdirectory: -- "$@")
+if [[ $? -gt 0 ]]; then
+  Help
+fi
+
+eval set -- ${args}
+while :
+do
+#  echo $1
+  case $1 in
+    -h | --help)            Help    ; exit  ;;
+    -s | --host)            HOST=$2   ; shift 2 ;;
+    -p | --port)            PORT=$2     ; shift 2 ;;
+    -u | --user)            USER=$2     ; shift 2 ;;
+    -d | --database)        DATABASE=$2   ; shift 2 ;;
+    -H | --pghome)          PGHOME=$2   ; shift 2 ;;
+    -x | --debug)           set -x    ; shift   ;;
+    -v | --verbose)         VERBOSE="--verbose"  ; shift   ;;
+    -l | --logdirectory)    SCRIPT_LOG_DIR=$2     ; shift 2 ;;
+    # -- means the end of the arguments; drop this, and break out of the while loop
+    --) shift; break ;;
+    *) >&2 echo Unsupported option: $1
+       Help ;;
+  esac
+done
+
+if [ "$METHOD" = "" ]; then
+    exit_abnormal
+fi
+
+SCRIPT_LOG_FILE=${SCRIPT_LOG_DIR}/vacuumdb_${METHOD}_`date +%Y_%m_%d`.log
+
+
+if [ ! -d ${SCRIPT_LOG_DIR} ]; then 
+  mkdir ${SCRIPT_LOG_DIR}
+  check_return_code $?
+else
+  LogInfo "LOG DIRECTORY (${SCRIPT_LOG_DIR}) exists"
+fi
+
+LogInfo "BEGIN $(basename "$0")"
+LogInfo "OPTIONS :"
+LogInfo "  METHOD : ${METHOD}"
+LogInfo "  HOST : ${HOST}"
+LogInfo "  PORT : ${PORT}"
+LogInfo "  USER : ${USER}"
+LogInfo "  PGHOME : ${PGHOME}"
+LogInfo "  DATABASE : ${DATABASE}"
+LogInfo "  SCRIPT_LOG_DIR : ${SCRIPT_LOG_DIR}"
+LogInfo "  VERBOSE : ${VERBOSE}"
+LogInfo "SCRIPT_LOG_FILE : ${SCRIPT_LOG_FILE}"
+
+if [ "${HOST}" != "" ]; then
+  HOST="--host=${HOST}"
+fi
+
+if [ "${USER}" != "" ]; then
+  USER="--username=${USER}"
+fi
+
+VACUUM=$PGHOME/bin/vacuumdb
+PSQL=$PGHOME/bin/psql
+
+LogInfo "  command : $PSQL -X -A -t $HOST $USER -S --no-password --port=$PORT -c \"select pg_is_in_recovery();\" postgres"
+RECOVERY=`$PSQL -X -A -t $HOST $USER -S --no-password --port=$PORT -c "select pg_is_in_recovery();" postgres`
+check_return_code $?
+LogInfo "Recovery (true or false ) ?  ${RECOVERY}"
+
+if [ "${RECOVERY}" = "f" ]; then # verifie qu'on est bien sur un master
+  case $METHOD in
+    lazy|vacuumanalyze)
+      METHOD_OPTION="--analyze"
+      ;;
+    vacuumonly)
+      METHOD_OPTION=""
+      ;;
+    analyzeonly)
+      METHOD_OPTION="--analyze-only"
+      ;;
+    full|vacuumfull)
+      METHOD_OPTION="--full --analyze"
+      ;;
+    *)
+      exit_abnormal
+      ;;
+  esac
+  LogInfo "BEGIN vacuum - method :  $METHOD_OPTION"
+  LogInfo "  command : $VACUUM $HOST $USER --no-password $DATABASE $METHOD_OPTION --all --port=$PORT $VERBOSE"
+  $VACUUM $HOST $USER --no-password $DATABASE $METHOD_OPTION --all --port=$PORT $VERBOSE >> ${SCRIPT_LOG_FILE} 2>&1
+  check_return_code $?
+  LogInfo "END vacuum - method :  $METHOD_OPTION"
+else 
+  LogInfo "No vacuum during recovery";
+fi
+
+if [ ! -z "${MAILADDR}" ]; then
+   cat ${SCRIPT_LOG_FILE} | mail -s "${NAME} issues on $(hostname --fqdn)" "${MAILADDR}"
+fi
+
+LogInfo "Suppression des logs";
+find ${SCRIPT_LOG_DIR} -type f -mtime +30 -print -exec rm {} \; >> ${SCRIPT_LOG_FILE} 2>&1;
+LogInfo "END $(basename "$0")"

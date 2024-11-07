@@ -8,7 +8,7 @@
     postgresql_autotune: true
     postgresql_replication: true
   vars_files:
-    - vars/main.yml
+    - vars/main_all_features.yml
 
   pre_tasks:
     # The Fedora 30+ container images have only C.UTF-8 installed

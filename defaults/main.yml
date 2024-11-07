@@ -1,6 +1,6 @@
 ---
 # Postgresql version
-postgresql_version: 15
+postgresql_version: 16
 
 postgresql_debug: false
 
@@ -281,10 +281,12 @@ postgresql_autotune_url: "{{ postgresql_autotune_base_url }}/v1/tuning/get-confi
 # Backup related variables (using the script automysqlbackup from https://sourceforge.net/projects/automysqlbackup/)
 # Controls the management of backups
 postgresql_backup: false
+# directory containing the script
+postgresql_backup_script_dir: /var/scripts/
 # Root directory containing the backups
 postgresql_backup_root_dir: /var/backups/postgresql
 # Destination path on the remote server
-postgresql_backup_script_dest: /var/backups/autopostgresqlbackup.sh
+postgresql_backup_script_dest: "{{ postgresql_backup_script_dir }}/autopostgresqlbackup.sh"
 # Include CREATE DATABASE in backup
 postgresql_backup_create_database: "yes"
 # Databases to backup or all to backup all databases
@@ -311,6 +313,21 @@ postgresql_backup_brmontly: 12
 # Permissions with which them backups are created
 postgresql_backup_perm: "600"
 
+
+# Vacuum related variables
+postgresql_vacuum: true
+# directory containing the script
+postgresql_vacuum_script_dir: /var/scripts
+postgresql_vacuum_log_dir: /var/scripts/logs
+postgresql_vacuum_script_dest: "{{ postgresql_vacuum_script_dir }}/pgsql_vacuumDB.sh"
+# The name of the cron job created to run the vacuum job on a recurring basis
+postgresql_vacuum_option: "vacuumanalyze"
+postgresql_vacuum_cron_job_name: Postgresql - Vacuum management
+postgresql_vacuum_schedule:
+  minute: 0
+  hour: 23
+# An email address that will be notified after each backup execution
+postgresql_vacuum_mail_addr: ""
 
 # Proxy variables
 # These variables are combined into dictionnaries (_postgresql_general_proxy_env and _postgresql_pkg_proxy_env) to provide proxy variables to appropriate tasks.

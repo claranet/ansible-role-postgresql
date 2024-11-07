@@ -24,6 +24,7 @@ Install and configure PostgreSQL server on Debian and RedHat systems using this 
     - [Configuration](#configuration)
     - [Auto tuning](#auto-tuning)
     - [Physical replication](#physical-replication)
+    - [Vacuum setup](#vacuum)
     - [Backup setup](#backup)
     - [User and database management](#createremove-database-users)
     - [Tablespaces management](#tablespaces)
@@ -67,6 +68,7 @@ Datadir initialization              | init,initialize,initialise
 Auto tune (with pg-config.org)      | autotune, auto-tune
 Configuration                       | config, configure, configuration
 Replication                         | repli, replication
+Vacuum                              | vacuum
 Backup                              | backup
 User & membership management        | user, users
 Tablespace management               | tblspc, tablespace, tablespaces
@@ -81,7 +83,6 @@ Linux/PostgreSQL versions supported
 
 Linux/PostgreSQL  |  12  |  13  |  14  |  15  | 16
 ------------------|:----:|:----:|:----:|:----:|:----:
-Debian 10         | Yes  | Yes  | Yes  | Yes  |  Yes 
 Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes 
 Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes 
 Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
@@ -252,10 +253,36 @@ postgresql_pg_basebackup_args: ""
 postgresql_pg_basebackup_cmd: {{ _postgresql_bin_path }}/pg_basebackup --no-password --host {{ postgresql_replication_primary_address }} --port {{ postgresql_replication_primary_port }} --username {{ postgresql_replication_user }} --pgdata {{ _postgresql_data_dir }} --checkpoint {{ postgresql_pg_basebackup_checkpoint }} {{ (postgresql_replication_slot != '') | ternary('--slot ' ~ postgresql_replication_slot, '') }} --wal-method {{ postgresql_pg_basebackup_walmethod }} --write-recovery-conf --verbose --progress {{ postgresql_pg_basebackup_args }}
 ```
 
+### Vacuum
+----
+_(new in v2.0.0)_
+
+By default vaccum is enabled (`postgresql_vacuum: true`), with vacuum and analyze planned daily at 23:00
+
+Configuration example for vacuum.
+
+To disable:
+```yaml
+postgresql_vacuum: false
+```
+
+To change schedule to 21:00: 
+```yaml
+postgresql_vacuum_schedule:
+  minute: 0
+  hour: 21
+```
+
+To vacuum only (other options : vacuumanalyze, vacuumfull, vacuumonly, analyzeonly)
+```yaml
+postgresql_vacuum_option: "vacuumonly"
+```
+
 ### Backup
 ----
-Configuration example for backup.
+By default, the backup is disabled (`postgresql_backup: false`).
 
+Configuration example for backup.
 ```yaml
 # Allow ansible to setup postgresql backups when running
 postgresql_backup: true
@@ -274,7 +301,6 @@ postgresql_backup_domonthly: 0
 postgresql_backup_brweekly: 0
 postgresql_backup_brmontly: 0
 ```
-
 
 ### Create/Remove database users
 ----

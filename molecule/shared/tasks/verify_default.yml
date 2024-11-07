@@ -1,3 +1,4 @@
+---
 - name: Check if postgresql is installed or not
   block:
     - name: "Retrieve package facts"
@@ -37,7 +38,7 @@
   ansible.builtin.set_fact:
     postgresql_service: "{{ postgresql_service_redhat is skipped | ternary(postgresql_service_debian, postgresql_service_redhat) }}"
 
-- name: Ensure mariadb service is active and enabled
+- name: Ensure postgresqL service is active and enabled
   ansible.builtin.assert:
     that:
       - postgresql_service_debian is skipped or postgresql_service_debian is not changed

@@ -50,6 +50,12 @@
         enablerepo: "{{ _perl_ipc_run_repo_name }}"
       environment: "{{ _postgresql_pkg_proxy_env }}"
 
+# prereqs to install psycopg2
+- name: Install gcc rockylinux
+  ansible.builtin.dnf:
+    name: gcc
+    state: present
+   
 - name: Ensure PostgreSQL packages (including locales) are installed.
   ansible.builtin.dnf:
     name: "{{ _postgresql_packages + postgresql_locale_packages }}"

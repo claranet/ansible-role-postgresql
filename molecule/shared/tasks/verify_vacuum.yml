@@ -1,0 +1,10 @@
+---
+- name: Check if vacuum script works
+  ansible.builtin.command: /var/scripts/pgsql_vacuumDB.sh vacuumanalyze
+  become: true
+  become_user: postgres
+
+- name: Check min last vacuum date
+  ansible.builtin.command: psql db1 -c "select min(last_vacuum) from pg_stat_user_tables;"
+  become: true
+  become_user: postgres

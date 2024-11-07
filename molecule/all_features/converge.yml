@@ -3,6 +3,8 @@
   hosts: all
   become: true
   gather_facts: true
+  vars_files:
+    - vars/main_all_features.yml
 
   pre_tasks:
     - name: Template out the temporary sql script

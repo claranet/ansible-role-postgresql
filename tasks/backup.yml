@@ -1,4 +1,12 @@
 ---
+- name: Create script directory path
+  ansible.builtin.file:
+    path: "{{ postgresql_backup_script_dir }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: '0755'
+
 - name: Create backups directory path
   ansible.builtin.file:
     path: "{{ postgresql_backup_root_dir }}"
