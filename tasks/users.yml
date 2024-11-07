@@ -20,6 +20,8 @@
     comment: "{{ item.comment | d(omit) }}"
     trust_input: "{{ item.trust_input | d(omit) }}"
   loop: "{{ postgresql_users }}"
+  loop_control:
+    label: "{{ item.name }}"
   no_log: "{{ postgres_users_no_log }}"
   become: true
   become_user: "{{ postgresql_user }}"
