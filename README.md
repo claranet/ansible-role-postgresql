@@ -255,6 +255,8 @@ postgresql_pg_basebackup_cmd: {{ _postgresql_bin_path }}/pg_basebackup --no-pass
 
 ### Vacuum
 ----
+_(new in v2.0.0)_
+
 By default vaccum is enabled (`postgresql_vacuum: true`), with vacuum and analyze planned daily at 23:00
 
 Configuration example for vacuum.
