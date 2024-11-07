@@ -255,10 +255,11 @@ postgresql_pg_basebackup_cmd: {{ _postgresql_bin_path }}/pg_basebackup --no-pass
 
 ### Vacuum
 ----
-Configuration example for vacuum.
-By default, vacuum and analyze are planned daily at 23:00
+By default vaccum is enabled (`postgresql_vacuum: true`), with vacuum and analyze planned daily at 23:00
 
-To disable : 
+Configuration example for vacuum.
+
+To disable:
 ```yaml
 postgresql_vacuum: false
 ```
@@ -270,14 +271,14 @@ postgresql_vacuum_schedule:
   hour: 21
 ```
 
-To vacuum only ( other options : vacuumanalyze, vacuumfull, vacuumonly, analyzeonly)
+To vacuum only (other options : vacuumanalyze, vacuumfull, vacuumonly, analyzeonly)
 ```yaml
 postgresql_vacuum_option: "vacuumonly"
 ```
 
 ### Backup
 ----
-By default,backup is disabled. 
+By default, the backup is disabled (`postgresql_backup: false`).
 
 Configuration example for backup.
 ```yaml
@@ -298,7 +299,6 @@ postgresql_backup_domonthly: 0
 postgresql_backup_brweekly: 0
 postgresql_backup_brmontly: 0
 ```
-
 
 ### Create/Remove database users
 ----
