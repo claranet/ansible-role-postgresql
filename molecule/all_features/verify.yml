@@ -1,0 +1,10 @@
+- name: Verify default setup
+  hosts: all
+  tags: always
+
+  tasks:
+    - name: Include default verification
+      ansible.builtin.include_tasks: tasks/verify_default.yml
+
+    - name: Include default verification
+      ansible.builtin.include_tasks: tasks/verify_vacuum.yml

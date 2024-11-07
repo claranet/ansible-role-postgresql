@@ -37,7 +37,7 @@ provisioner:
     v: true
   ansible_args:
     - -v
-    - --tags=always,uninstall,install,init,config
+    - --tags=always,uninstall,install,init,config,db,vacuum
   inventory:
     group_vars:
       all:
