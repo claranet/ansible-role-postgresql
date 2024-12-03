@@ -59,10 +59,10 @@ jobs:
         config:
           - name: rocky8
             image: "rockylinux"
-            tag: "8.7"
+            tag: "8.9"
           - name: rocky9
             image: "rockylinux"
-            tag: "9.1"
+            tag: "9.3"
           - name: debian11
             image: "debian"
             tag: "11"
@@ -85,7 +85,7 @@ jobs:
         with:
           path: "${{ github.repository }}"
       - name: molecule
-        uses: gofrolist/molecule-action@v2
+        uses: gofrolist/molecule-action@v2.7.40
         with:
           # molecule_options: --debug
           molecule_command: test
