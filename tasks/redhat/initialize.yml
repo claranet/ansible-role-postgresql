@@ -8,7 +8,8 @@
     state: present
   notify:
     - Reload systemd
-    - Restart postgresql
+    - Reload postgresql
+    # - Restart postgresql
   when:
     - _postgresql_service_path | length > 0
   tags: skip_ansible_lint

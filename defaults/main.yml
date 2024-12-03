@@ -56,13 +56,14 @@ postgresql_global_config_options:
 # Extra configuration options that are always inserted inside postgresql.conf
 postgresql_global_config_options_extra: []
 # Actual postgresql log directory
-postgresql_log_dir: "{{ ((postgresql_global_config_options + postgresql_global_config_options_extra) | items2dict(key_name='option', value_name='value')).log_directory }}"
+postgresql_log_dir: "{{ ((postgresql_global_config_options + postgresql_global_config_options_extra) |
+  items2dict(key_name='option', value_name='value')).log_directory }}"
 postgresql_effective_log_dir: "{{ postgresql_log_dir is match('/') | ternary(postgresql_log_dir, _postgresql_data_dir ~ '/' ~ postgresql_log_dir) }}"
 # Permissions for the postgresql log directory
 postgresql_log_directory_mode: '0700'
-# Whether or not to create a tmpfiles.d postgresql file to persist permissions on unix socket directories and log directories accross system rebbots 
+# Whether or not to create a tmpfiles.d postgresql file to persist permissions on unix socket directories and log directories accross system rebbots
 postgresql_persist_permissions: true
-# Path to the template used by Ansible to create the tempfile conf to persist permissions 
+# Path to the template used by Ansible to create the tempfile conf to persist permissions
 # You can update this path to a custom file to completely customize the persisting rules
 postgresql_tempfile_src_template_path: etc/tmpfiles.d/postgresql-common.conf.j2
 # Destination path for the tempfile configuration
@@ -71,6 +72,13 @@ postgresql_tempfile_dest_path: /etc/tmpfiles.d/postgresql-common.conf
 postgresql_tempfile_mode: '0644'
 postgresql_tempfile_owner: root
 postgresql_tempfile_group: root
+
+# todo: how to handler configuration changes
+postgresql_config_change_handler: service_reload # service_[restart|reload] engine_reload=reload
+postgresql_config_change_allow_restart_1: false
+postgresql_config_change_allow_restart_2: false
+postgresql_config_change_tatoo_filepath: "{{ _postgresql_user_home_dir }}/.service_restarted.claranet.postgresql"
+postgresql_config_change_restart_tatoo: true
 
 # Host based authentication (hba) entries to be added to the pg_hba.conf. This
 # variable's defaults reflect the defaults that come with a fresh installation.
@@ -216,7 +224,7 @@ postgresql_replication_create_slot: true
 postgresql_replication_primary_inventory_name: ""
 # ip addresses/dns names used to generate replication hba entries that allow replicas to connect to the primary server
 postgresql_replication_replica_addresses: []
-# User provided replication specific hba rules, if empty the role will automatically create the rules to autorize each replica 
+# User provided replication specific hba rules, if empty the role will automatically create the rules to autorize each replica
 # Check _postgresql_replication_hba_entries variable in vars/main.yml
 postgresql_replication_hba_entries: []
 # Authentication method specific for the replica hosts

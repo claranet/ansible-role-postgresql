@@ -1,0 +1,4 @@
+---
+postgresql_max_connections: 200
+postgresql_config_change_allow_restart_1: true
+postgresql_config_change_allow_restart_2: true

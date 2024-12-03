@@ -9,3 +9,12 @@
     state: "{{ postgresql_restarted_state }}"
     enabled: "{{ postgresql_service_enabled }}"
     sleep: 5
+
+# - name: Advanced_handle_config_change
+#   ansible.builtin.include_tasks: tasks/handlers/config_change.yml
+
+- name: Reload postgresql
+  ansible.builtin.service:
+    name: "{{ _postgresql_daemon }}"
+    state: "reloaded"
+    sleep: 5
