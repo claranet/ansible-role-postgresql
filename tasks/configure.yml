@@ -9,7 +9,6 @@
   loop: "{{ postgresql_autotune_config_options |
     community.general.lists_mergeby(postgresql_global_config_options, 'option') |
     community.general.lists_mergeby(postgresql_global_config_options_extra, 'option') }}"
-  # notify: Restart postgresql
   notify: Reload postgresql
 
 - name: Configure host based authentication (if entries are configured).
@@ -21,7 +20,6 @@
     backup: true
     mode: "600"
   diff: true
-  # notify: Restart postgresql
   notify: Reload postgresql
 # Not using the postgresql_hba module because it entailed having
 # a task to ensure the file is empty of default rules
@@ -64,14 +62,14 @@
     login_user: "{{ postgresql_user }}"
     login_unix_socket: "{{ postgresql_unix_socket_directories[0] }}"
   register: _postgresql_res_pending_params
-  # changed_when: _postgresql_res_pending_params.rowcount > 0
+  changed_when: postgresql_config_change_allow_restart and _postgresql_res_pending_params.rowcount > 0
   become: true
   become_user: "{{ postgresql_user }}"
   vars:
     ansible_ssh_pipelining: true
     ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
 
-- name: Handle params requiring a full restart to be taken into account
+- name: Handle params requiring a full restart
   when: _postgresql_res_pending_params.rowcount > 0
   block:
     - name: Extract param names
@@ -79,14 +77,12 @@
         _postgresql_pending_params_str: "'{{ _postgresql_res_pending_params.query_result | map(attribute='name') | list | join(',') }}'"
 
     - name: Display params awaiting restart
-      when: not postgresql_config_change_allow_restart
       ansible.builtin.debug:
         msg: >-
-          The following configuration parameters are pending a restart for their new values to take effect:
+          [WARNING]: THE FOLLOWING CONFIGURATION PARAMETERS ARE PENDING A RESTART FOR THEIR NEW VALUES TO TAKE EFFECT:
           {{ _postgresql_pending_params_str }}.
 
-          To enable a full service restart (which may cause downtime), set
-          `postgresql_config_change_allow_restart` to `true`.
+          TO ENABLE A FULL SERVICE RESTART (WHICH MAY CAUSE DOWNTIME), ENSURE `postgresql_config_change_allow_restart` IS `true`.
 
     - name: Restart service
       when: postgresql_config_change_allow_restart

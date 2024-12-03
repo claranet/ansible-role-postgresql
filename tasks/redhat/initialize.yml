@@ -9,11 +9,9 @@
   notify:
     - Reload systemd
     - Reload postgresql
-    # - Restart postgresql
   when:
     - _postgresql_service_path | length > 0
   tags: skip_ansible_lint
-
 
 # Not using postgresql-XX-setup cause it didnt consistent output regarding the success or failure reason of an execution
 - name: Ensure PostgreSQL database is initialized
