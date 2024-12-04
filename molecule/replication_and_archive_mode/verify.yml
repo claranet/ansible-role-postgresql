@@ -1,0 +1,60 @@
+---
+- name: Verify default setup
+  hosts: all
+  tags: always
+
+  tasks:
+    - name: Include default verification
+      ansible.builtin.include_tasks: tasks/verify_default.yml
+
+- name: Verify replication
+  hosts: replica
+  tags: always
+  become: true
+
+  tasks:
+    - name: Retrieve databases on replica nodes
+      ansible.builtin.command: psql -q -A -t -c "SELECT datname FROM pg_database"
+      register: databases
+      changed_when: false
+      become_user: postgres
+      vars:
+        ansible_ssh_pipelining: true
+
+    - name: Assert db created on primary is also present on the replicas
+      ansible.builtin.assert:
+        that: item in databases.stdout_lines
+      loop: [db1]
+
+    - name: Remove test database from primary
+      ansible.builtin.command: dropdb db2
+      run_once: true
+      failed_when: false
+      changed_when: true
+      delegate_to: "{{ postgresql_replication_primary_inventory_name }}"
+      tags: skip_ansible_lint
+      become_user: postgres
+      vars:
+        ansible_ssh_pipelining: true
+
+    - name: Retrieve databases on replica nodes
+      ansible.builtin.command: psql -q -A -t -c "SELECT datname FROM pg_database"
+      register: databases
+      changed_when: false
+      become_user: postgres
+      vars:
+        ansible_ssh_pipelining: true
+
+    - name: Assert db created on primary is also present on the replicas
+      ansible.builtin.assert:
+        that: '"db2" not in databases.stdout_lines'
+
+    - name: Recreate test database on primary
+      ansible.builtin.command: createdb -O user2 db2
+      run_once: true
+      changed_when: false
+      delegate_to: "{{ postgresql_replication_primary_inventory_name }}"
+      become_user: postgres
+      tags: skip_ansible_lint
+      vars:
+        ansible_ssh_pipelining: true
