@@ -5,6 +5,7 @@ postgresql_listen_addresses: 0.0.0.0
 postgresql_shared_preload_libraries:
   - pg_stat_statements
 postgresql_max_connections: 100
+postgresql_config_change_allow_restart: false
 # Custom configuration options provided by the user
 postgresql_global_config_options_extra:
   - option: log_statement

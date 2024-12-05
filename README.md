@@ -154,6 +154,10 @@ postgresql_hba_raw: |
 
 _Notes:_
 
+By default, this role restarts the PostgreSQL service during subsequent configuration changes after the initial engine installation, ensuring all changes are applied immediately. However, this behavior can cause potential service outages.
+
+To prevent automatic restarts, you can set the variable `postgresql_config_change_allow_restart` (introduced in `v2.1.0`) to `false`. Starting with (`v3.0.0`), the default value of this variable will change to `false`, meaning the role will avoid restarting PostgreSQL by default. If you rely on the current behavior, you will need to explicitly set this variable to true in your configuration.
+
 In relation to HBA rules, you have the option to configure the variable `postgresql_hba_use_raw` as `true` and specify the contents of `postgresql_hba_raw`. These contents will be inserted directly into the `pg_hba.conf` file.
 
 Alternatively, if you possess a file containing these rules, you can set the `postgresql_hba_template_path` variable to the path of that file on the Ansible controller. In this case, the specified file will be copied to replace the `pg_hba.conf` file.
@@ -509,9 +513,6 @@ postgresql_data_dir:
 postgresql_initdb_extra_args: ''
 # Debian only. postgresql cluster name
 postgresql_cluster_name: main
-
-# Set postgresql state when configuration changes are made. Recommended values: `restarted` or `reloaded`
-postgresql_restarted_state: "restarted"
 
 # PostgreSQL system user/group
 postgresql_user: postgres

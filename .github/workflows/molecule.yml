@@ -1,102 +1,98 @@
 ---
-name: Ansible Molecule
-
-on:  # yamllint disable-line rule:truthy
-  push:
-    tags_ignore:
-      - '*'
-  pull_request:
-
-jobs:
-  setup:
-    name: Setup scenarios matrix
-    runs-on: ubuntu-22.04
-    outputs:
-      scenarios: ${{ steps.matrix.outputs.scenarios }}
-    steps:
-      - uses: actions/checkout@v3
-      - id: matrix
-        run: |
-          JSON="["
-
-          for s in $(find molecule -mindepth 1 -maxdepth 1 -type d -exec basename "{}" \;); do
-              if [ -e "molecule/${s}/molecule.yml" ]; then
-                  JSON="${JSON}\"${s}\","
-              fi
-          done
-
-          JSON="${JSON%?}"
-          JSON="$JSON]"
-
-          echo "::set-output name=scenarios::$(echo $JSON)"
-
-  lint:
-    name: Lint
-    needs:
-      - setup
-    runs-on: ubuntu-22.04
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          path: "${{ github.repository }}"
-      - name: Run ansible lint
-        uses: ansible/ansible-lint-action@v6.17.0
-        with:
-          path: "."
-
-  test:
-    name: Scenario "${{ matrix.scenario }}", pg-${{ matrix.postgresql_version }} on ${{ matrix.config.image }}:${{ matrix.config.tag }}
-    needs:
-      - lint
-      - setup
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        scenario: ${{ fromJson(needs.setup.outputs.scenarios) }}
-        postgresql_version:
-          - 15
-        config:
-          - name: rocky8
-            image: "rockylinux"
-            tag: "8.7"
-          - name: rocky9
-            image: "rockylinux"
-            tag: "9.1"
-          - name: debian10
-            image: "debian"
-            tag: "10"
-          - name: debian11
-            image: "debian"
-            tag: "11"
-          - name: debian12
-            image: "debian"
-            tag: "12"
-          - name: ubuntu20
-            image: "ubuntu"
-            tag: "20.04"
-          - name: ubuntu22
-            image: "ubuntu"
-            tag: "22.04"
-          - name: ubuntu24
-            image: "ubuntu"
-            tag: "24.04"
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          path: "${{ github.repository }}"
-      - name: molecule
-        uses: gofrolist/molecule-action@v2
-        with:
-          # molecule_options: --debug
-          molecule_command: test
-          molecule_args: --scenario-name ${{ matrix.scenario }} -d docker
-          molecule_working_dir: "${{ github.repository }}"
-        env:
-          image: ${{ matrix.config.image }}
-          tag: ${{ matrix.config.tag }}
-          name: ${{ matrix.config.name }}
-          postgresql_version: ${{ matrix.postgresql_version }}
+  name: Ansible Molecule
+  
+  on:  # yamllint disable-line rule:truthy
+    push:
+      tags_ignore:
+        - '*'
+    pull_request:
+  
+  jobs:
+    setup:
+      name: Setup scenarios matrix
+      runs-on: ubuntu-22.04
+      outputs:
+        scenarios: ${{ steps.matrix.outputs.scenarios }}
+      steps:
+        - uses: actions/checkout@v4
+        - id: matrix
+          run: |
+            JSON="["
+  
+            for s in $(find molecule -mindepth 1 -maxdepth 1 -type d -exec basename "{}" \;); do
+                if [ -e "molecule/${s}/molecule.yml" ]; then
+                    JSON="${JSON}\"${s}\","
+                fi
+            done
+  
+            JSON="${JSON%?}"
+            JSON="$JSON]"
+            echo "::set-output name=scenarios::$(echo $JSON)"
+  
+    lint:
+      name: Lint
+      needs:
+        - setup
+      runs-on: ubuntu-22.04
+      steps:
+        - name: checkout
+          uses: actions/checkout@v4
+          with:
+            path: "${{ github.repository }}"
+        - name: Run ansible lint
+          uses: ansible/ansible-lint-action@v6.17.0
+          with:
+            path: "."
+  
+    test:
+      name: Scenario "${{ matrix.scenario }}", pg-${{ matrix.postgresql_version }} on ${{ matrix.config.image }}:${{ matrix.config.tag }}
+      needs:
+        - lint
+        - setup
+      runs-on: ubuntu-20.04
+      strategy:
+        fail-fast: false
+        matrix:
+          scenario: ${{ fromJson(needs.setup.outputs.scenarios) }}
+          postgresql_version:
+            - 16
+          config:
+            - name: rocky8
+              image: "rockylinux"
+              tag: "8.9"
+            - name: rocky9
+              image: "rockylinux"
+              tag: "9.3"
+            - name: debian11
+              image: "debian"
+              tag: "11"
+            - name: debian12
+              image: "debian"
+              tag: "12"
+            - name: ubuntu20
+              image: "ubuntu"
+              tag: "20.04"
+            - name: ubuntu22
+              image: "ubuntu"
+              tag: "22.04"
+            - name: ubuntu24
+              image: "ubuntu"
+              tag: "24.04"
+  
+      steps:
+        - name: checkout
+          uses: actions/checkout@v4
+          with:
+            path: "${{ github.repository }}"
+        - name: molecule
+          uses: gofrolist/molecule-action@v2.7.40
+          with:
+            # molecule_options: --debug
+            molecule_command: test
+            molecule_args: --scenario-name ${{ matrix.scenario }} -d docker
+            molecule_working_dir: "${{ github.repository }}"
+          env:
+            image: ${{ matrix.config.image }}
+            tag: ${{ matrix.config.tag }}
+            name: ${{ matrix.config.name }}
+            postgresql_version: ${{ matrix.postgresql_version }}

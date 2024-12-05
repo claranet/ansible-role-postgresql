@@ -33,7 +33,8 @@ postgresql_unix_socket_directories:
   - /run/postgresql
 # Permissions for the PostgreSQL unix sockets (default is distro dependant)
 postgresql_unix_socket_directories_mode: ''
-
+# Allow service restart for configuration changes that require it
+postgresql_config_change_allow_restart: "{{ postgresql_restarted_state | d('restarted') == 'restarted' }}"
 
 # Global configuration options that will be set in postgresql.conf.
 postgresql_global_config_options:
@@ -91,9 +92,6 @@ postgresql_hba_raw: ''
 postgresql_initdb_extra_args: ''
 # Debian only. postgresql cluster name
 postgresql_cluster_name: main
-
-# Set postgresql state when configuration changes are made. Recommended values: `restarted` or `reloaded`
-postgresql_restarted_state: "restarted"
 
 # PostgreSQL system user/group
 postgresql_user: postgres

@@ -7,7 +7,7 @@
     group: root
     mode: "644"
 
-- name: Add postgreqsl repository signing key
+- name: Add postgresql repository signing key
   ansible.builtin.uri:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     dest: /etc/apt/trusted.gpg.d/pgdb.asc

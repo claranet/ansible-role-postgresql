@@ -32,7 +32,7 @@
       regex_replace('\\n+$', '', multiline=true) |
       regex_replace('=', ':', multiline=true) |
       from_yaml | dict2items(key_name='option', value_name='value') }}"
-  when: _postgresql_autotune_res is succeeded
+  when: not ansible_check_mode and _postgresql_autotune_res is succeeded
 
 - name: "Output autotune optimized settings"
   ansible.builtin.debug:
