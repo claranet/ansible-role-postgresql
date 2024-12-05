@@ -33,6 +33,8 @@ postgresql_unix_socket_directories:
   - /run/postgresql
 # Permissions for the PostgreSQL unix sockets (default is distro dependant)
 postgresql_unix_socket_directories_mode: ''
+# Allow service restart for configuration changes that require it
+postgresql_config_change_allow_restart: "{{ (postgresql_restarted_state | d('restarted')) == 'restarted' }}"
 
 
 # Global configuration options that will be set in postgresql.conf.
@@ -56,13 +58,14 @@ postgresql_global_config_options:
 # Extra configuration options that are always inserted inside postgresql.conf
 postgresql_global_config_options_extra: []
 # Actual postgresql log directory
-postgresql_log_dir: "{{ ((postgresql_global_config_options + postgresql_global_config_options_extra) | items2dict(key_name='option', value_name='value')).log_directory }}"
+postgresql_log_dir: "{{ ((postgresql_global_config_options + postgresql_global_config_options_extra) |
+  items2dict(key_name='option', value_name='value')).log_directory }}"
 postgresql_effective_log_dir: "{{ postgresql_log_dir is match('/') | ternary(postgresql_log_dir, _postgresql_data_dir ~ '/' ~ postgresql_log_dir) }}"
 # Permissions for the postgresql log directory
 postgresql_log_directory_mode: '0700'
-# Whether or not to create a tmpfiles.d postgresql file to persist permissions on unix socket directories and log directories accross system rebbots 
+# Whether or not to create a tmpfiles.d postgresql file to persist permissions on unix socket directories and log directories accross system reboots
 postgresql_persist_permissions: true
-# Path to the template used by Ansible to create the tempfile conf to persist permissions 
+# Path to the template used by Ansible to create the tempfile conf to persist permissions
 # You can update this path to a custom file to completely customize the persisting rules
 postgresql_tempfile_src_template_path: etc/tmpfiles.d/postgresql-common.conf.j2
 # Destination path for the tempfile configuration
@@ -91,9 +94,6 @@ postgresql_hba_raw: ''
 postgresql_initdb_extra_args: ''
 # Debian only. postgresql cluster name
 postgresql_cluster_name: main
-
-# Set postgresql state when configuration changes are made. Recommended values: `restarted` or `reloaded`
-postgresql_restarted_state: "restarted"
 
 # PostgreSQL system user/group
 postgresql_user: postgres
@@ -216,7 +216,7 @@ postgresql_replication_create_slot: true
 postgresql_replication_primary_inventory_name: ""
 # ip addresses/dns names used to generate replication hba entries that allow replicas to connect to the primary server
 postgresql_replication_replica_addresses: []
-# User provided replication specific hba rules, if empty the role will automatically create the rules to autorize each replica 
+# User provided replication specific hba rules, if empty the role will automatically create the rules to autorize each replica
 # Check _postgresql_replication_hba_entries variable in vars/main.yml
 postgresql_replication_hba_entries: []
 # Authentication method specific for the replica hosts

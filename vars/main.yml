@@ -24,6 +24,8 @@ _postgresql_replication_hba_entries: "{{ postgresql_replication_hba_entries }}"
 _postgresql_general_proxy_env: {}
 # Env var used to provide specified proxies to package manager tasks
 _postgresql_pkg_proxy_env: {}
+# How to handle configuration changes
+_postgresql_config_change_handler_state: reloaded
 
 _postgresql_apt_mirror_url: http://apt.postgresql.org/pub/repos/apt
 _postgresql_repo_rpm_url: "https://download.postgresql.org/pub/repos/yum/reporpms/{{ (ansible_distro == 'fedora') | ternary('F', 'EL') }}-{{ ansible_distribution_major_version }}-x86_64/pgdg-{{ (ansible_distro == 'fedora') | ternary('fedora', 'redhat') }}-repo-latest.noarch.rpm"

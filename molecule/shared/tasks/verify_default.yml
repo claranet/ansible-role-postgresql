@@ -4,6 +4,7 @@
     - name: "Retrieve package facts"
       ansible.builtin.package_facts:
         manager: auto
+      no_log: true
 
     # - name: show ansible_facts.packages
     #   ansible.builtin.debug:
