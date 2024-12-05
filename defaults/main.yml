@@ -34,7 +34,7 @@ postgresql_unix_socket_directories:
 # Permissions for the PostgreSQL unix sockets (default is distro dependant)
 postgresql_unix_socket_directories_mode: ''
 # Allow service restart for configuration changes that require it
-postgresql_config_change_allow_restart: "{{ postgresql_restarted_state | d('restarted') == 'restarted' }}"
+postgresql_config_change_allow_restart: "{{ (postgresql_restarted_state | d('restarted')) == 'restarted' }}"
 
 
 # Global configuration options that will be set in postgresql.conf.
