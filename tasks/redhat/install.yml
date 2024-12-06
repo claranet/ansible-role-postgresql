@@ -51,7 +51,7 @@
       environment: "{{ _postgresql_pkg_proxy_env }}"
 
 # prereqs to install psycopg2
-- name: Install gcc rockylinux
+- name: Install gcc
   ansible.builtin.dnf:
     name: gcc
     state: present

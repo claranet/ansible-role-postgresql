@@ -88,8 +88,8 @@ Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes
 Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
 Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
 Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-RockyLinux 8.7    | Yes  | Yes  | Yes  | Yes  |  Yes 
-RockyLinux 9.1    | Yes  | Yes  | Yes  | Yes  |  Yes 
+RockyLinux 8.9    | Yes  | Yes  | Yes  | Yes  |  Yes 
+RockyLinux 9.3    | Yes  | Yes  | Yes  | Yes  |  Yes 
 Fedora 38         | No   | No   | No   | No   |  No  
 
 ## Role features in use
@@ -607,7 +607,7 @@ If you want to uninstall a Postgresql installation with this role, set both vari
     postgresql_autotune: true
     # postgresql_autotune_base_url: http://192.168.56.101:3000
 
-    postgres_users_no_log: false
+    postgresql_users_no_log: false
     postgresql_users:
     # Create two groups 'group1' and 'group2' by making use of thr role_attr_flags attribute
       - name: group1

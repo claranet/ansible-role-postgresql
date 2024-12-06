@@ -16,7 +16,7 @@
     session_role: "{{ item.session_role | d(omit) }}"
     trust_input: "{{ item.trust_input | d(omit) }}"
   loop: "{{ postgresql_queries }}"
-  no_log: "{{ postgres_users_no_log }}"
+  no_log: "{{ postgresql_users_no_log }}"
   become: true
   become_user: "{{ postgresql_user }}"
   vars:
@@ -40,7 +40,7 @@
     session_role: "{{ item.session_role | d(omit) }}"
     trust_input: "{{ item.trust_input | d(omit) }}"
   loop: "{{ postgresql_scripts }}"
-  no_log: "{{ postgres_users_no_log }}"
+  no_log: "{{ postgresql_users_no_log }}"
   changed_when: false
   become: true
   become_user: "{{ postgresql_user }}"
