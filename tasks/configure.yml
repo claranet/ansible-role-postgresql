@@ -47,10 +47,11 @@
     mode: "{{ postgresql_tempfile_mode }}"
   when: postgresql_persist_permissions
 
-- name: Set postgresql service enabled state
+- name: Set postgresql service enabled and started state
   ansible.builtin.service:
     name: "{{ _postgresql_daemon }}"
     enabled: "{{ postgresql_service_enabled }}"
+    state: "{{ _postgresql_service_state | d(omit, true) }}"
 
 - name: Ensure postgresql service is running with latest up to date configuration
   ansible.builtin.meta: flush_handlers
