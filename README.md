@@ -607,7 +607,7 @@ If you want to uninstall a Postgresql installation with this role, set both vari
     postgresql_autotune: true
     # postgresql_autotune_base_url: http://192.168.56.101:3000
 
-    postgres_users_no_log: false
+    postgresql_users_no_log: false
     postgresql_users:
     # Create two groups 'group1' and 'group2' by making use of thr role_attr_flags attribute
       - name: group1

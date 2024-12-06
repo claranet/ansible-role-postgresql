@@ -14,7 +14,7 @@
   when: not postgresql_replication or postgresql_replication_role == "primary"
   become: true
   become_user: "{{ postgresql_user }}"
-  no_log: "{{ postgres_users_no_log }}"
+  no_log: "{{ postgresql_users_no_log }}"
   vars:
     ansible_ssh_pipelining: true
     ansible_python_interpreter: "{{ _postgresql_ansible_python_interpreter }}"
