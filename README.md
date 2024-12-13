@@ -286,6 +286,8 @@ postgresql_vacuum_option: "vacuumonly"
 
 ### Backup
 ----
+> :rotating_light: The provided backup script is not intended for use within Claranet environments. Claranet has superior and more robust backup solutions that should be used for production systems. This script is designed solely for development, testing, or demonstration purposes and should not replace established backup practices in live environments. :rotating_light:
+
 By default, the backup is disabled (`postgresql_backup: false`).
 
 Configuration example for backup.
