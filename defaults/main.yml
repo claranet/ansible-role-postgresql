@@ -347,3 +347,4 @@ postgresql_uninstall_2: false
 postgresql_install: true
 postgresql_manage_objects: true
 postgresql_configure: true
+postgresql_initialize: true
