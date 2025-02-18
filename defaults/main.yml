@@ -342,3 +342,8 @@ postgresql_https_pkg_proxy: ''
 # Confirm twice that postgresql should be uninstalled
 postgresql_uninstall_1: false
 postgresql_uninstall_2: false
+
+
+postgresql_install: true
+postgresql_manage_objects: true
+postgresql_configure: true
