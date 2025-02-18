@@ -21,7 +21,7 @@
 
 - name: Import initialization tasks
   ansible.builtin.import_tasks: initialize.yml
-  when: postgresql_install | bool
+  when: postgresql_initialize | bool
   tags:
     - init
     - initialize
@@ -45,7 +45,7 @@
 - name: Import primary replication tasks
   ansible.builtin.import_tasks: replication-primary.yml
   when:
-    - postgresql_replication
+    - postgresql_replication and postgresql_configure_replication
     - postgresql_replication_role == "primary"
   tags:
     - repli
@@ -54,7 +54,7 @@
 - name: Import replica replication tasks
   ansible.builtin.import_tasks: replication-replica.yml
   when:
-    - postgresql_replication
+    - postgresql_replication and postgresql_configure_replication
     - postgresql_replication_role == "replica"
   tags:
     - repli
