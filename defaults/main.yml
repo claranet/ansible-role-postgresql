@@ -343,8 +343,13 @@ postgresql_https_pkg_proxy: ''
 postgresql_uninstall_1: false
 postgresql_uninstall_2: false
 
-
+# Controls PostgreSQL packages installation 
 postgresql_install: true
+# Controls engine specific objects like databases,users,tablespaces,ownerships,extensions,sqlquery executions
 postgresql_manage_objects: true
+# Controls configuration
 postgresql_configure: true
+# Controls cluster initialization
 postgresql_initialize: true
+# Controls actual postgresql replication configuration 
+postgresql_configure_replication: true
