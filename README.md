@@ -109,6 +109,7 @@ These variables are translated to environnement variables `http_proxy` and `http
 
 ### Installation
 ----
+By default installation is enabled (`postgresql_install: true`)
 _default PostgreSQL version is 15_
 PostgreSQL and locales installation.
 
@@ -572,6 +573,16 @@ postgresql_tempfile_mode: '0644'
 postgresql_tempfile_owner: root
 postgresql_tempfile_group: root
 
+# Controls running tasks handling: postgreSQL packages installation 
+postgresql_install: true
+# Controls running tasks handling: cluster initialization
+postgresql_initialize: true
+# Controls running tasks handling: engine specific objects like databases,users,tablespaces,ownerships,extensions,sqlquery executions
+postgresql_manage_objects: true
+# Controls running tasks handling: configuration
+postgresql_configure: true
+# Controls running tasks handling: actual replication configuration 
+postgresql_configure_replication: true
 ```
 
 ### Uninstallation
