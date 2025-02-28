@@ -1,13 +1,13 @@
 ---
 - name: Add postgresql repository
   ansible.builtin.template:
-    src: etc/apt/sources.list.d/pgdb.list.j2
+    src: "{{ _postgresql_apt_repo_template_path }}"
     dest: /etc/apt/sources.list.d/pgdg.list
     owner: root
     group: root
     mode: "644"
 
-- name: Add postgreqsl repository signing key
+- name: Add postgresql repository signing key
   ansible.builtin.uri:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     dest: /etc/apt/trusted.gpg.d/pgdb.asc

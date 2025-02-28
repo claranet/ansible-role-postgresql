@@ -30,6 +30,7 @@ _postgresql_config_change_handler_state: reloaded
 _postgresql_service_state: started
 
 _postgresql_apt_mirror_url: http://apt.postgresql.org/pub/repos/apt
+_postgresql_apt_repo_template_path: templates/etc/apt/sources.list.d/pgdb.list.j2
 _postgresql_repo_rpm_url: "https://download.postgresql.org/pub/repos/yum/reporpms/{{ (ansible_distro == 'fedora') | ternary('F', 'EL') }}-{{ ansible_distribution_major_version }}-x86_64/pgdg-{{ (ansible_distro == 'fedora') | ternary('fedora', 'redhat') }}-repo-latest.noarch.rpm"
 _postgresql_unix_socket_directories_mode: "{{ postgresql_unix_socket_directories_mode | d('2775', true) }}"
 _postgresql_service_path: "{{ postgresql_service_path | d('', true) }}"
