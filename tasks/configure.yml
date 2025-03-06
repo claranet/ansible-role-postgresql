@@ -1,13 +1,4 @@
 ---
-- name: Define pg_conn_vars anchor
-  when: false
-  ansible.builtin.set_fact:
-    _: &pg_conn_vars
-
-
-# - name: Import tasks
-#   ansible.builtin.import_tasks: tasks/define_pg_conn_vars.yml
-
 - name: Configure global settings.
   ansible.builtin.lineinfile:
     dest: "{{ _postgresql_config_path }}/postgresql.conf"
