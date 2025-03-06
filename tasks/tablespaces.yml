@@ -1,3 +1,4 @@
+---
 - name: Manage tablespaces location.
   ansible.builtin.file:
     path: "{{ item.location }}"
@@ -27,13 +28,19 @@
         set: "{{ ((item.state | d('present')) == 'present') | ternary(item.set | d(omit), omit) }}"
         owner: "{{ ((item.state | d('present')) == 'present') | ternary(item.owner | d(omit), omit) }}"
         location: "{{ ((item.state | d('present')) == 'present') | ternary(item.location | d(omit), omit) }}"
-        port: "{{ postgresql_port }}"
-        login_user: "{{ item.login_user | default(postgresql_user) }}"
-        login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-        ssl_mode: "{{ item.ssl_mode | d(omit) }}"
-        ca_cert: "{{ item.ca_cert | d(omit) }}"
-        session_role: "{{ item.session_role | d(omit) }}"
         trust_input: "{{ item.trust_input | d(omit) }}"
+        # connection options
+        ca_cert: "{{ postgresql_conn_vars.ca_cert | d(omit, true) }}"
+        connect_params: "{{ postgresql_conn_vars.connect_params | d(omit, true) }}"
+        login_host: "{{ postgresql_conn_vars.login_host | d(omit, true) }}"
+        login_password: "{{ postgresql_conn_vars.login_password | d(omit, true) }}"
+        login_unix_socket: "{{ postgresql_conn_vars.login_unix_socket | d(omit, true) }}"
+        login_user: "{{ postgresql_conn_vars.login_user | d(omit, true) }}"
+        login_port: "{{ postgresql_conn_vars.login_port | d(omit, true) }}"
+        session_role: "{{ postgresql_conn_vars.session_role | d(omit, true) }}"
+        ssl_cert: "{{ postgresql_conn_vars.ssl_cert | d(omit, true) }}"
+        ssl_key: "{{ postgresql_conn_vars.ssl_key | d(omit, true) }}"
+        ssl_mode: "{{ postgresql_conn_vars.ssl_mode | d(omit, true) }}"
       register: tbspc_mgmt_res
       failed_when:
         - tbspc_mgmt_res.failed

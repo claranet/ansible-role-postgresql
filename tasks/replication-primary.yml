@@ -12,6 +12,18 @@
     expires: infinity
     role_attr_flags: REPLICATION
     state: present
+    # connection options
+    ca_cert: "{{ postgresql_conn_vars.ca_cert | d(omit, true) }}"
+    connect_params: "{{ postgresql_conn_vars.connect_params | d(omit, true) }}"
+    login_host: "{{ postgresql_conn_vars.login_host | d(omit, true) }}"
+    login_password: "{{ postgresql_conn_vars.login_password | d(omit, true) }}"
+    login_unix_socket: "{{ postgresql_conn_vars.login_unix_socket | d(omit, true) }}"
+    login_user: "{{ postgresql_conn_vars.login_user | d(omit, true) }}"
+    login_port: "{{ postgresql_conn_vars.login_port | d(omit, true) }}"
+    session_role: "{{ postgresql_conn_vars.session_role | d(omit, true) }}"
+    ssl_cert: "{{ postgresql_conn_vars.ssl_cert | d(omit, true) }}"
+    ssl_key: "{{ postgresql_conn_vars.ssl_key | d(omit, true) }}"
+    ssl_mode: "{{ postgresql_conn_vars.ssl_mode | d(omit, true) }}"
   no_log: "{{ postgresql_users_no_log }}"
   become: true
   become_user: "{{ postgresql_user }}"
@@ -27,9 +39,19 @@
     state: "{{ item.state | d(omit, true) }}"
     db: "{{ item.db | d(omit, true) }}"
     output_plugin: "{{ item.output_plugin | d(omit, true) }}"
-    port: "{{ postgresql_port }}"
     immediately_reserve: "{{ item.immediately_reserve | d(omit, true) }}"
-    login_unix_socket: "{{ postgresql_unix_socket_directories[0] }}"
+    # connection options
+    ca_cert: "{{ postgresql_conn_vars.ca_cert | d(omit, true) }}"
+    connect_params: "{{ postgresql_conn_vars.connect_params | d(omit, true) }}"
+    login_host: "{{ postgresql_conn_vars.login_host | d(omit, true) }}"
+    login_password: "{{ postgresql_conn_vars.login_password | d(omit, true) }}"
+    login_unix_socket: "{{ postgresql_conn_vars.login_unix_socket | d(omit, true) }}"
+    login_user: "{{ postgresql_conn_vars.login_user | d(omit, true) }}"
+    login_port: "{{ postgresql_conn_vars.login_port | d(omit, true) }}"
+    session_role: "{{ postgresql_conn_vars.session_role | d(omit, true) }}"
+    ssl_cert: "{{ postgresql_conn_vars.ssl_cert | d(omit, true) }}"
+    ssl_key: "{{ postgresql_conn_vars.ssl_key | d(omit, true) }}"
+    ssl_mode: "{{ postgresql_conn_vars.ssl_mode | d(omit, true) }}"
   become: true
   become_user: "{{ postgresql_user }}"
   vars:

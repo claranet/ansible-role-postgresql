@@ -36,3 +36,17 @@
   when:
     - postgresql_replication
     - postgresql_replication_hba_entries | d([], true) | length == 0
+
+- name: Set postgresql_conn_vars to make it available later in hostvars
+  ansible.builtin.set_fact:
+    postgresql_conn_vars: "{{ postgresql_conn_vars }}"
+  # no_log: true
+
+# - name: Show delegated_to facts
+#   delegate_to: "{{ (hostvars.keys() | list)[1] }}"
+#   ansible.builtin.debug:
+#     var: v
+#   vars:
+#     v:
+#       ca_cert: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.ca_cert | d(omit, true) }}"
+

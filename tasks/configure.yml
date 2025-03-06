@@ -1,4 +1,13 @@
 ---
+- name: Define pg_conn_vars anchor
+  when: false
+  ansible.builtin.set_fact:
+    _: &pg_conn_vars
+
+
+# - name: Import tasks
+#   ansible.builtin.import_tasks: tasks/define_pg_conn_vars.yml
+
 - name: Configure global settings.
   ansible.builtin.lineinfile:
     dest: "{{ _postgresql_config_path }}/postgresql.conf"
@@ -59,9 +68,18 @@
 - name: Retrieve settings requiring a restart
   community.postgresql.postgresql_query:
     query: select name from pg_settings where pending_restart='true';
-    port: "{{ postgresql_port }}"
-    login_user: "{{ postgresql_user }}"
-    login_unix_socket: "{{ postgresql_unix_socket_directories[0] }}"
+    # connection options
+    ca_cert: "{{ postgresql_conn_vars.ca_cert | d(omit, true) }}"
+    connect_params: "{{ postgresql_conn_vars.connect_params | d(omit, true) }}"
+    login_host: "{{ postgresql_conn_vars.login_host | d(omit, true) }}"
+    login_password: "{{ postgresql_conn_vars.login_password | d(omit, true) }}"
+    login_unix_socket: "{{ postgresql_conn_vars.login_unix_socket | d(omit, true) }}"
+    login_user: "{{ postgresql_conn_vars.login_user | d(omit, true) }}"
+    login_port: "{{ postgresql_conn_vars.login_port | d(omit, true) }}"
+    session_role: "{{ postgresql_conn_vars.session_role | d(omit, true) }}"
+    ssl_cert: "{{ postgresql_conn_vars.ssl_cert | d(omit, true) }}"
+    ssl_key: "{{ postgresql_conn_vars.ssl_key | d(omit, true) }}"
+    ssl_mode: "{{ postgresql_conn_vars.ssl_mode | d(omit, true) }}"
   register: _postgresql_res_pending_params
   changed_when: postgresql_config_change_allow_restart and _postgresql_res_pending_params.rowcount > 0
   become: true

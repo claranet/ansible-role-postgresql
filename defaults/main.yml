@@ -353,3 +353,22 @@ postgresql_manage_objects: true
 postgresql_configure: true
 # Controls running tasks handling: actual replication configuration 
 postgresql_configure_replication: true
+
+# PostgreSQl connection vars object
+postgresql_conn_vars:
+  # ca_cert: null # alias ssl_rootcert
+  ca_cert: "{{ inventory_hostname }}" # alias ssl_rootcert
+  connect_params: null
+  login_host: null
+  login_password: null
+  login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+  login_user: "{{ postgresql_user }}"
+  login_port: "{{ postgresql_port }}"
+  session_role: null
+  ssl_cert: null
+  ssl_key: null
+  ssl_mode: null
+#     # login_db: "{{ item.db | default(omit) }}"
+#     # trust_input: "{{ item.trust_input | d(omit) }}"
+
+#     # maintenance_db: postgres (on database module)
