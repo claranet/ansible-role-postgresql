@@ -55,7 +55,7 @@ jobs:
       matrix:
         scenario: ${{ fromJson(needs.setup.outputs.scenarios) }}
         postgresql_version:
-          - 16
+          - 17
         config:
           - name: rocky8
             image: "rockylinux"
