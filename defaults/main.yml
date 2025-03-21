@@ -343,7 +343,7 @@ postgresql_https_pkg_proxy: ''
 postgresql_uninstall_1: false
 postgresql_uninstall_2: false
 
-# Controls running tasks handling: postgreSQL packages installation 
+# Controls running tasks handling: postgreSQL packages installation
 postgresql_install: true
 # Controls running tasks handling: cluster initialization
 postgresql_initialize: true
@@ -351,17 +351,21 @@ postgresql_initialize: true
 postgresql_manage_objects: true
 # Controls running tasks handling: configuration
 postgresql_configure: true
-# Controls running tasks handling: actual replication configuration 
+# Controls running tasks handling: actual replication configuration
 postgresql_configure_replication: true
+
+# Controls installation when running it for patroni
+postgresql_is_patroni: false
+# Whether to essentially not run any tasks after installation
+postgresql_only_install: false
 
 # PostgreSQl connection vars object
 postgresql_conn_vars:
-  # ca_cert: null # alias ssl_rootcert
-  ca_cert: "{{ inventory_hostname }}" # alias ssl_rootcert
+  ca_cert: null # alias ssl_rootcert
   connect_params: null
   login_host: null
   login_password: null
-  login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+  login_unix_socket: "{{ postgresql_unix_socket_directories[0] | d(null, true) }}"
   login_user: "{{ postgresql_user }}"
   login_port: "{{ postgresql_port }}"
   session_role: null
