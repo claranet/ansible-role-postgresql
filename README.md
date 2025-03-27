@@ -59,23 +59,24 @@ ansible-galaxy install claranet.postgresql
 
 ### Available features and tags
 -----
-This role support the following features and tags in the following order during execution:
-Feature                             | Tag
+This role support the following features and tags along with control variables in the following order during execution:
+
+Feature                             | Control variable(s) | Tag(s)
 ------------------------------------|---------------------
-Uninstallation                      | uninstallation
-Installation                        | install, installation
-Datadir initialization              | init,initialize,initialise
-Auto tune (with pg-config.org)      | autotune, auto-tune
-Configuration                       | config, configure, configuration
-Replication                         | repli, replication
-Vacuum                              | vacuum
-Backup                              | backup
-User & membership management        | user, users
-Tablespace management               | tblspc, tablespace, tablespaces
-Database management                 | db, database, databases
-Ownership & privileges management   | owner, owners, ownership, priv, privs, privileges
-Extensions management               | ext, extension, extensions
-SQL code executions                 | query, script
+Uninstallation                      | postgresql_uninstall_1,postgresql_uninstall_2 | uninstallation
+Installation                        | postgresql_install | install, installation
+Datadir initialization              | postgresql_initialize | init,initialize,initialise
+Auto tune (with pg-config.org)      | postgresql_autotune | autotune, auto-tune
+Configuration                       | postgresql_configure | config, configure, configuration
+Replication                         | postgresql_replication,postgresql_configure_replication | repli, replication
+Vacuum                              | postgresql_vacuum | vacuum
+Backup                              | postgresql_backup | backup
+User & membership management        | postgresql_manage_objects | user, users
+Tablespace management               | postgresql_manage_objects | tblspc, tablespace, tablespaces
+Database management                 | postgresql_manage_objects | db, database, databases
+Ownership & privileges management   | postgresql_manage_objects | owner, owners, ownership, priv, privs, privileges
+Extensions management               | postgresql_manage_objects | ext, extension, extensions
+SQL code executions                 | postgresql_manage_objects | query, script
 
 
 Linux/PostgreSQL versions supported
@@ -109,12 +110,11 @@ These variables are translated to environnement variables `http_proxy` and `http
 
 ### Installation
 ----
-By default installation is enabled (`postgresql_install: true`)
-_default PostgreSQL version is 15_
+_default PostgreSQL version is 16_
 PostgreSQL and locales installation.
 
 ```yaml
-postgresql_version: "15"
+postgresql_version: "16"
 
 # Debian only. Used to generate the locales used by PostgreSQL databases.
 postgresql_locales:
@@ -125,7 +125,32 @@ postgresql_locales:
 postgresql_locale_packages:
   - glibc-langpack-en
   - glibc-langpack-fr
+
+# Controls running tasks handling: postgreSQL packages installation
+postgresql_install: true
 ```
+
+
+### Patroni integration
+----
+When using Patroni to manage PostgreSQL replication, Patroni expects PostgreSQL packages be installed upfront. 
+However once the Patroni cluster is bootstrapped, the underlying PostgreSQL instances can be managed just like any other regular replication.
+
+In order to install PostgreSQL pacakges before bootstrapping a Patroni cluster this role can be invoked with the following variables which will cause the role to only perform installation.
+
+```yaml
+postgresql_is_patroni: true
+postgresql_install: true
+postgresql_only_install: true
+```
+
+
+After Patroni bootstrap this role can be invoked with the following combination of variables to essentially skip the packages installation and manage the cluster like a pre configuration replication setup:
+```yaml
+postgresql_is_patroni: true
+postgresql_install: false
+```
+
 
 ### Configuration 
 ----
@@ -153,7 +178,8 @@ postgresql_hba_raw: |
 
 # Allow service restart for configuration changes that require it
 postgresql_config_change_allow_restart: true
-
+# Controls running tasks handling: configuration
+postgresql_configure: true
 ```
 
 _Notes:_
@@ -256,8 +282,12 @@ postgresql_pg_basebackup_walmethod: stream  # none/stream/fetch
 postgresql_pg_basebackup_args: ""
 
 # Actual pg_basebackup built with the previous parameters
-# DO NOT override this variable except you know what you are doing 
+# DO NOT override this variable unless you know what you are doing 
 postgresql_pg_basebackup_cmd: {{ _postgresql_bin_path }}/pg_basebackup --no-password --host {{ postgresql_replication_primary_address }} --port {{ postgresql_replication_primary_port }} --username {{ postgresql_replication_user }} --pgdata {{ _postgresql_data_dir }} --checkpoint {{ postgresql_pg_basebackup_checkpoint }} {{ (postgresql_replication_slot != '') | ternary('--slot ' ~ postgresql_replication_slot, '') }} --wal-method {{ postgresql_pg_basebackup_walmethod }} --write-recovery-conf --verbose --progress {{ postgresql_pg_basebackup_args }}
+
+# Controls running tasks handling: actual replication configuration
+# DO NOT override this variable unless you know what you are doing
+postgresql_configure_replication: true
 ```
 
 ### Vacuum
@@ -573,8 +603,6 @@ postgresql_tempfile_mode: '0644'
 postgresql_tempfile_owner: root
 postgresql_tempfile_group: root
 
-# Controls running tasks handling: postgreSQL packages installation 
-postgresql_install: true
 # Controls running tasks handling: cluster initialization
 postgresql_initialize: true
 # Controls running tasks handling: engine specific objects like databases,users,tablespaces,ownerships,extensions,sqlquery executions
