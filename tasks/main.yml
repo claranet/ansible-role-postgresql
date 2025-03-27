@@ -23,7 +23,7 @@
 - name: Set fact for ending role
   ansible.builtin.set_fact:
     _postgresql_end_role: "{{ postgresql_install and postgresql_only_install }}"
-
+  tags: always
 
 - name: Import initialization tasks
   ansible.builtin.import_tasks: initialize.yml
