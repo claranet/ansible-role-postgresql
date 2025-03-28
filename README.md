@@ -14,13 +14,14 @@ Install and configure PostgreSQL server on Debian and RedHat systems using this 
 ## Table of Contents
 
 1. [Role Requirements](#warning-requirements)
-2. [Role Dependencies](#arrows_counterclockwise-dependencies)
+2. [Role Dependencies](#arrows_counterclockwise-collection-dependencies)
 3. [Role Installation](#zap-role-installation)
 4. [Features and Tags](#available-features-and-tags)
 6. [Supported Linux/PostgreSQL Versions](#linuxpostgresql-versions-supported)
 5. [Role features in use](#role-features-in-use)
     - [Proxy usage](#proxy-usage)
     - [Installation](#installation)
+    - [Patroni integration](#patroni-integration)
     - [Configuration](#configuration)
     - [Auto tuning](#auto-tuning)
     - [Physical replication](#physical-replication)
@@ -61,37 +62,37 @@ ansible-galaxy install claranet.postgresql
 -----
 This role support the following features and tags along with control variables in the following order during execution:
 
-Feature                             | Control variable(s) | Tag(s)
-------------------------------------|---------------------
-Uninstallation                      | postgresql_uninstall_1,postgresql_uninstall_2 | uninstallation
-Installation                        | postgresql_install | install, installation
-Datadir initialization              | postgresql_initialize | init,initialize,initialise
-Auto tune (with pg-config.org)      | postgresql_autotune | autotune, auto-tune
-Configuration                       | postgresql_configure | config, configure, configuration
+Feature                             | Control variable(s)                                     | Tag(s)
+------------------------------------|---------------------------------------------------------|------------------------
+Uninstallation                      | postgresql_uninstall_1,postgresql_uninstall_2           | uninstallation
+Installation                        | postgresql_install                                      | install, installation
+Datadir initialization              | postgresql_initialize                                   | init,initialize,initialise
+Auto tune (with pg-config.org)      | postgresql_autotune                                     | autotune, auto-tune
+Configuration                       | postgresql_configure                                    | config, configure, configuration
 Replication                         | postgresql_replication,postgresql_configure_replication | repli, replication
-Vacuum                              | postgresql_vacuum | vacuum
-Backup                              | postgresql_backup | backup
-User & membership management        | postgresql_manage_objects | user, users
-Tablespace management               | postgresql_manage_objects | tblspc, tablespace, tablespaces
-Database management                 | postgresql_manage_objects | db, database, databases
-Ownership & privileges management   | postgresql_manage_objects | owner, owners, ownership, priv, privs, privileges
-Extensions management               | postgresql_manage_objects | ext, extension, extensions
-SQL code executions                 | postgresql_manage_objects | query, script
+Vacuum                              | postgresql_vacuum                                       | vacuum
+Backup                              | postgresql_backup                                       | backup
+User & membership management        | postgresql_manage_objects                               | user, users
+Tablespace management               | postgresql_manage_objects                               | tblspc, tablespace, tablespaces
+Database management                 | postgresql_manage_objects                               | db, database, databases
+Ownership & privileges management   | postgresql_manage_objects                               | owner, owners, ownership, priv, privs, privileges
+Extensions management               | postgresql_manage_objects                               | ext, extension, extensions
+SQL code executions                 | postgresql_manage_objects                               | query, script
 
 
 Linux/PostgreSQL versions supported
 -----
 
-Linux/PostgreSQL  |  12  |  13  |  14  |  15  | 16
-------------------|:----:|:----:|:----:|:----:|:----:
-Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes 
-Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes 
-Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-RockyLinux 8.9    | Yes  | Yes  | Yes  | Yes  |  Yes 
-RockyLinux 9.3    | Yes  | Yes  | Yes  | Yes  |  Yes 
-Fedora 38         | No   | No   | No   | No   |  No  
+Linux/PostgreSQL  |  12  |  13  |  14  |  15  | 16   |  17
+------------------|:----:|:----:|:----:|:----:|:----:|:----:
+Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+RockyLinux 8.9    | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+RockyLinux 9.3    | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Fedora 38         | No   | No   | No   | No   |  No  |  No
 
 ## Role features in use
 
