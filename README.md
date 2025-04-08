@@ -608,9 +608,7 @@ postgresql_tempfile_group: root
 postgresql_initialize: true
 # Controls running tasks handling: engine specific objects like databases,users,tablespaces,ownerships,extensions,sqlquery executions
 postgresql_manage_objects: true
-# Controls running tasks handling: configuration
-postgresql_configure: true
-# Controls running tasks handling: actual replication configuration 
+# Controls running tasks handling: actual replication configuration
 postgresql_configure_replication: true
 ```
 
