@@ -109,6 +109,21 @@ postgresql_group: postgres
 postgresql_service_state: started
 # Whether or not to enable the postgresql service after installation
 postgresql_service_enabled: true
+# PostgreSQl connection vars object
+# This variable is used to feed common connection parameters when calling community.postgresql modules
+# to manage database objects (users, databases, schemas, etc..)
+postgresql_conn_vars:
+  ca_cert: null   # alias ssl_rootcert
+  connect_params: null
+  login_host: null
+  login_password: null
+  login_unix_socket: "{{ postgresql_unix_socket_directories[0] | d(null, true) }}"
+  login_user: "{{ postgresql_user }}"
+  login_port: "{{ postgresql_port }}"
+  session_role: null
+  ssl_cert: null
+  ssl_key: null
+  ssl_mode: null
 
 
 # PosgreSQL objects management
@@ -359,20 +374,3 @@ postgresql_uninstall_2: false
 postgresql_is_patroni: false
 # When combined with postgresql_install:true, this essentially skips all remaining tasks after packages installation
 postgresql_only_install: false
-
-# PostgreSQl connection vars object
-# This variable is used to feed common connection parameters when calling community.postgresql modules
-# to manage database objects (users, databases, schemas, etc..)
-postgresql_conn_vars:
-  ca_cert: null   # alias ssl_rootcert
-  connect_params: null
-  login_host: null
-  login_password: null
-  login_unix_socket: "{{ postgresql_unix_socket_directories[0] | d(null, true) }}"
-  login_user: "{{ postgresql_user }}"
-  login_port: "{{ postgresql_port }}"
-  session_role: null
-  ssl_cert: null
-  ssl_key: null
-  ssl_mode: null
-

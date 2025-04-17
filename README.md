@@ -64,12 +64,12 @@ This role support the following features and tags along with control variables i
 
 Feature                             | Control variable(s)                                     | Tag(s)
 ------------------------------------|---------------------------------------------------------|------------------------
-Uninstallation                      | postgresql_uninstall_1,postgresql_uninstall_2           | uninstallation
+Uninstallation                      | postgresql_uninstall_1, postgresql_uninstall_2           | uninstallation
 Installation                        | postgresql_install                                      | install, installation
 Datadir initialization              | postgresql_initialize                                   | init,initialize,initialise
 Auto tune (with pg-config.org)      | postgresql_autotune                                     | autotune, auto-tune
 Configuration                       | postgresql_configure                                    | config, configure, configuration
-Replication                         | postgresql_replication,postgresql_configure_replication | repli, replication
+Replication                         | postgresql_replication, postgresql_configure_replication | repli, replication
 Vacuum                              | postgresql_vacuum                                       | vacuum
 Backup                              | postgresql_backup                                       | backup
 User & membership management        | postgresql_manage_objects                               | user, users
@@ -610,6 +610,22 @@ postgresql_initialize: true
 postgresql_manage_objects: true
 # Controls running tasks handling: actual replication configuration
 postgresql_configure_replication: true
+
+# PostgreSQl connection vars object
+# This variable is used to feed common connection parameters when calling community.postgresql modules
+# to manage database objects (users, databases, schemas, etc..)
+postgresql_conn_vars:
+  ca_cert: null   # alias ssl_rootcert
+  connect_params: null
+  login_host: null
+  login_password: null
+  login_unix_socket: "{{ postgresql_unix_socket_directories[0] | d(null, true) }}"
+  login_user: "{{ postgresql_user }}"
+  login_port: "{{ postgresql_port }}"
+  session_role: null
+  ssl_cert: null
+  ssl_key: null
+  ssl_mode: null
 ```
 
 ### Uninstallation
@@ -626,7 +642,7 @@ If you want to uninstall a Postgresql installation with this role, set both vari
   gather_facts: true
 
   vars:
-    postgresql_version: "15"
+    postgresql_version: "16"
 
     # Run debug tasks withint the role 
     postgresql_debug: true
