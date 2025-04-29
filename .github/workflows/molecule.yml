@@ -61,8 +61,8 @@ jobs:
           #   image: "rockylinux"
           #   tag: "8.9"
           - name: rocky9
-            image: "rockylinux"
-            tag: "9.3"
+            image: "rockylinux/rockylinux"
+            tag: "9.5"
           # - name: debian11
           #   image: "debian"
           #   tag: "11"
