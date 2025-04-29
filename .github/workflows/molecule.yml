@@ -57,27 +57,27 @@ jobs:
         postgresql_version:
           - 16
         config:
-          # - name: rocky8
-          #   image: "rockylinux"
-          #   tag: "8.9"
+          - name: rocky8
+            image: "rockylinux"
+            tag: "8.9"
           - name: rocky9
             image: "rockylinux/rockylinux"
             tag: "9.5"
-          # - name: debian11
-          #   image: "debian"
-          #   tag: "11"
-          # - name: debian12
-          #   image: "debian"
-          #   tag: "12"
-          # - name: ubuntu20
-          #   image: "ubuntu"
-          #   tag: "20.04"
-          # - name: ubuntu22
-          #   image: "ubuntu"
-          #   tag: "22.04"
-          # - name: ubuntu24
-          #   image: "ubuntu"
-          #   tag: "24.04"
+          - name: debian11
+            image: "debian"
+            tag: "11"
+          - name: debian12
+            image: "debian"
+            tag: "12"
+          - name: ubuntu20
+            image: "ubuntu"
+            tag: "20.04"
+          - name: ubuntu22
+            image: "ubuntu"
+            tag: "22.04"
+          - name: ubuntu24
+            image: "ubuntu"
+            tag: "24.04"
 
     steps:
       - name: checkout
