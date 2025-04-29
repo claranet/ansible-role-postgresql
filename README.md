@@ -644,7 +644,7 @@ If you want to uninstall a Postgresql installation with this role, set both vari
   vars:
     postgresql_version: "16"
 
-    # Run debug tasks withint the role 
+    # Run debug tasks within the role
     postgresql_debug: true
 
     # Configuration
