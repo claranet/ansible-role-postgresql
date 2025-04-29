@@ -58,8 +58,8 @@ jobs:
           - 16
         config:
           - name: rocky8
-            image: "rockylinux"
-            tag: "8.9"
+            image: "rockylinux/rockylinux"
+            tag: "8.10"
           - name: rocky9
             image: "rockylinux/rockylinux"
             tag: "9.5"
