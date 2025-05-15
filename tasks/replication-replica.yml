@@ -2,8 +2,18 @@
 - name: Check replication status on replica
   community.postgresql.postgresql_query:
     query: select * from pg_stat_wal_receiver
-    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
-    port: "{{ postgresql_port | default(omit) }}"
+    # connection options
+    ca_cert: "{{ postgresql_conn_vars.ca_cert | d(omit, true) }}"
+    connect_params: "{{ postgresql_conn_vars.connect_params | d(omit, true) }}"
+    login_host: "{{ postgresql_conn_vars.login_host | d(omit, true) }}"
+    login_password: "{{ postgresql_conn_vars.login_password | d(omit, true) }}"
+    login_unix_socket: "{{ postgresql_conn_vars.login_unix_socket | d(omit, true) }}"
+    login_user: "{{ postgresql_conn_vars.login_user | d(omit, true) }}"
+    login_port: "{{ postgresql_conn_vars.login_port | d(omit, true) }}"
+    session_role: "{{ postgresql_conn_vars.session_role | d(omit, true) }}"
+    ssl_cert: "{{ postgresql_conn_vars.ssl_cert | d(omit, true) }}"
+    ssl_key: "{{ postgresql_conn_vars.ssl_key | d(omit, true) }}"
+    ssl_mode: "{{ postgresql_conn_vars.ssl_mode | d(omit, true) }}"
   register: _postgresql_replication_check
   become: true
   become_user: "{{ postgresql_user }}"
@@ -71,8 +81,18 @@
         name: "{{ postgresql_replication_slot }}"
         slot_type: physical
         state: present
-        port: "{{ postgresql_replication_primary_port }}"
-        login_unix_socket: "{{ postgresql_unix_socket_directories[0] }}"
+        # connection options, possibly lookup the conn_vars for the primary to use the actual primary conn vars and not assume they will largely be similar
+        ca_cert: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.ca_cert | d(omit, true) }}"
+        connect_params: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.connect_params | d(omit, true) }}"
+        login_host: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.login_host | d(omit, true) }}"
+        login_password: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.login_password | d(omit, true) }}"
+        login_unix_socket: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.login_unix_socket | d(omit, true) }}"
+        login_user: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.login_user | d(omit, true) }}"
+        session_role: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.session_role | d(omit, true) }}"
+        ssl_cert: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.ssl_cert | d(omit, true) }}"
+        ssl_key: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.ssl_key | d(omit, true) }}"
+        ssl_mode: "{{ hostvars[postgresql_replication_primary_inventory_name].postgresql_conn_vars.ssl_mode | d(omit, true) }}"
+        login_port: "{{ postgresql_replication_primary_port }}"
       delegate_to: "{{ postgresql_replication_primary_inventory_name | d(omit, true) }}"
       become: true
       become_user: "{{ postgresql_user }}"

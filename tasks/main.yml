@@ -14,12 +14,23 @@
 
 - name: Import installation tasks
   ansible.builtin.import_tasks: install.yml
+  when:
+    - postgresql_install | bool
   tags:
     - install
     - installation
 
+- name: Set fact for ending role
+  ansible.builtin.set_fact:
+    _postgresql_end_role: "{{ postgresql_install and postgresql_only_install }}"
+  tags: always
+
 - name: Import initialization tasks
   ansible.builtin.import_tasks: initialize.yml
+  when:
+    - not _postgresql_end_role
+    - not postgresql_is_patroni | bool
+    - postgresql_initialize | bool
   tags:
     - init
     - initialize
@@ -27,13 +38,20 @@
 
 - name: Import auto tunning tasks
   ansible.builtin.import_tasks: autotune.yml
-  when: postgresql_autotune | bool
+  when:
+    - not _postgresql_end_role
+    - not postgresql_is_patroni | bool
+    - postgresql_autotune | bool
   tags:
     - auto-tune
     - autotune
 
 - name: Import configuration tasks
   ansible.builtin.import_tasks: configure.yml
+  when:
+    - not _postgresql_end_role
+    - not postgresql_is_patroni | bool
+    - postgresql_configure | bool
   tags:
     - config
     - configure
@@ -42,7 +60,9 @@
 - name: Import primary replication tasks
   ansible.builtin.import_tasks: replication-primary.yml
   when:
-    - postgresql_replication
+    - not _postgresql_end_role
+    - not postgresql_is_patroni | bool
+    - postgresql_replication and postgresql_configure_replication
     - postgresql_replication_role == "primary"
   tags:
     - repli
@@ -51,7 +71,9 @@
 - name: Import replica replication tasks
   ansible.builtin.import_tasks: replication-replica.yml
   when:
-    - postgresql_replication
+    - not _postgresql_end_role
+    - not postgresql_is_patroni | bool
+    - postgresql_replication and postgresql_configure_replication
     - postgresql_replication_role == "replica"
   tags:
     - repli
@@ -59,23 +81,33 @@
 
 - name: Import backup tasks
   ansible.builtin.import_tasks: backup.yml
-  when: postgresql_backup | bool
+  when:
+    - not _postgresql_end_role
+    - postgresql_backup | bool
   tags: backup
 
 - name: Import vacuum tasks
   ansible.builtin.import_tasks: vacuum.yml
-  when: postgresql_vacuum | bool
+  when:
+    - not _postgresql_end_role
+    - postgresql_vacuum | bool
   tags: vacuum
 
 - name: Import user management tasks
   ansible.builtin.import_tasks: users.yml
-  when: not postgresql_replication or postgresql_replication_role == "primary"
+  when:
+    - not _postgresql_end_role
+    - postgresql_manage_objects
+    - not (postgresql_replication or postgresql_is_patroni) or postgresql_replication_role == "primary"
   tags:
     - user
     - users
 
 - name: Import tablespace tasks
   ansible.builtin.import_tasks: tablespaces.yml
+  when:
+    - not _postgresql_end_role
+    - postgresql_manage_objects
   tags:
     - tblspc
     - tablespace
@@ -83,7 +115,10 @@
 
 - name: Import databases tasks
   ansible.builtin.import_tasks: databases.yml
-  when: not postgresql_replication or postgresql_replication_role == "primary"
+  when:
+    - not _postgresql_end_role
+    - postgresql_manage_objects
+    - not (postgresql_replication or postgresql_is_patroni) or postgresql_replication_role == "primary"
   tags:
     - db
     - database
@@ -91,7 +126,10 @@
 
 - name: Import ownerships and privileges tasks
   ansible.builtin.import_tasks: ownerships.yml
-  when: not postgresql_replication or postgresql_replication_role == "primary"
+  when:
+    - not _postgresql_end_role
+    - postgresql_manage_objects
+    - not (postgresql_replication or postgresql_is_patroni) or postgresql_replication_role == "primary"
   tags:
     - owner
     - owners
@@ -102,7 +140,10 @@
 
 - name: Import extensions tasks
   ansible.builtin.import_tasks: extensions.yml
-  when: not postgresql_replication or postgresql_replication_role == "primary"
+  when:
+    - not _postgresql_end_role
+    - postgresql_manage_objects
+    - not (postgresql_replication or postgresql_is_patroni) or postgresql_replication_role == "primary"
   tags:
     - ext
     - extension
@@ -110,7 +151,10 @@
 
 - name: Import sql script and queries tasks
   ansible.builtin.import_tasks: sql.yml
-  when: not postgresql_replication or postgresql_replication_role == "primary"
+  when:
+    - not _postgresql_end_role
+    - postgresql_manage_objects
+    - not (postgresql_replication or postgresql_is_patroni) or postgresql_replication_role == "primary"
   tags:
     - query
     - script

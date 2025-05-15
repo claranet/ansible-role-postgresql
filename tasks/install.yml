@@ -42,6 +42,7 @@
     extra_args: --upgrade
     virtualenv: "{{ _postgresql_virtualenv_path }}"
     virtualenv_command: python3 -m venv
+  become: true
   become_user: "{{ postgresql_user }}"
   when: not ansible_check_mode
   environment: "{{ _postgresql_general_proxy_env | ansible.builtin.combine({'PATH': _postgresql_pythonized_path}) }}"
@@ -53,5 +54,6 @@
   ansible.builtin.pip:
     name: "{{ _postgresql_dependencies_pip_packages }}"
     virtualenv: "{{ _postgresql_virtualenv_path }}"
+  become: true
   become_user: "{{ postgresql_user }}"
   environment: "{{ _postgresql_general_proxy_env | ansible.builtin.combine({'PATH': _postgresql_pythonized_path}) }}"

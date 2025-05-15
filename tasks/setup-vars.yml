@@ -36,3 +36,8 @@
   when:
     - postgresql_replication
     - postgresql_replication_hba_entries | d([], true) | length == 0
+
+- name: Set postgresql_conn_vars to make it available later in hostvars
+  ansible.builtin.set_fact:
+    postgresql_conn_vars: "{{ postgresql_conn_vars }}"
+  no_log: "{{ postgresql_debug }}"

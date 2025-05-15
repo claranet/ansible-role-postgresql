@@ -14,13 +14,14 @@ Install and configure PostgreSQL server on Debian and RedHat systems using this 
 ## Table of Contents
 
 1. [Role Requirements](#warning-requirements)
-2. [Role Dependencies](#arrows_counterclockwise-dependencies)
+2. [Role Dependencies](#arrows_counterclockwise-collection-dependencies)
 3. [Role Installation](#zap-role-installation)
 4. [Features and Tags](#available-features-and-tags)
 6. [Supported Linux/PostgreSQL Versions](#linuxpostgresql-versions-supported)
 5. [Role features in use](#role-features-in-use)
     - [Proxy usage](#proxy-usage)
     - [Installation](#installation)
+    - [Patroni integration](#patroni-integration)
     - [Configuration](#configuration)
     - [Auto tuning](#auto-tuning)
     - [Physical replication](#physical-replication)
@@ -59,38 +60,39 @@ ansible-galaxy install claranet.postgresql
 
 ### Available features and tags
 -----
-This role support the following features and tags in the following order during execution:
-Feature                             | Tag
-------------------------------------|---------------------
-Uninstallation                      | uninstallation
-Installation                        | install, installation
-Datadir initialization              | init,initialize,initialise
-Auto tune (with pg-config.org)      | autotune, auto-tune
-Configuration                       | config, configure, configuration
-Replication                         | repli, replication
-Vacuum                              | vacuum
-Backup                              | backup
-User & membership management        | user, users
-Tablespace management               | tblspc, tablespace, tablespaces
-Database management                 | db, database, databases
-Ownership & privileges management   | owner, owners, ownership, priv, privs, privileges
-Extensions management               | ext, extension, extensions
-SQL code executions                 | query, script
+This role support the following features and tags along with control variables in the following order during execution:
+
+Feature                             | Control variable(s)                                     | Tag(s)
+------------------------------------|---------------------------------------------------------|------------------------
+Uninstallation                      | postgresql_uninstall_1, postgresql_uninstall_2           | uninstallation
+Installation                        | postgresql_install                                      | install, installation
+Datadir initialization              | postgresql_initialize                                   | init,initialize,initialise
+Auto tune (with pg-config.org)      | postgresql_autotune                                     | autotune, auto-tune
+Configuration                       | postgresql_configure                                    | config, configure, configuration
+Replication                         | postgresql_replication, postgresql_configure_replication | repli, replication
+Vacuum                              | postgresql_vacuum                                       | vacuum
+Backup                              | postgresql_backup                                       | backup
+User & membership management        | postgresql_manage_objects                               | user, users
+Tablespace management               | postgresql_manage_objects                               | tblspc, tablespace, tablespaces
+Database management                 | postgresql_manage_objects                               | db, database, databases
+Ownership & privileges management   | postgresql_manage_objects                               | owner, owners, ownership, priv, privs, privileges
+Extensions management               | postgresql_manage_objects                               | ext, extension, extensions
+SQL code executions                 | postgresql_manage_objects                               | query, script
 
 
 Linux/PostgreSQL versions supported
 -----
 
-Linux/PostgreSQL  |  12  |  13  |  14  |  15  | 16
-------------------|:----:|:----:|:----:|:----:|:----:
-Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes 
-Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes 
-Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes 
-RockyLinux 8.9    | Yes  | Yes  | Yes  | Yes  |  Yes 
-RockyLinux 9.3    | Yes  | Yes  | Yes  | Yes  |  Yes 
-Fedora 38         | No   | No   | No   | No   |  No  
+Linux/PostgreSQL  |  12  |  13  |  14  |  15  | 16   |  17
+------------------|:----:|:----:|:----:|:----:|:----:|:----:
+Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+RockyLinux 8.9    | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+RockyLinux 9.3    | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
+Fedora 38         | No   | No   | No   | No   |  No  |  No
 
 ## Role features in use
 
@@ -109,11 +111,11 @@ These variables are translated to environnement variables `http_proxy` and `http
 
 ### Installation
 ----
-_default PostgreSQL version is 15_
+_default PostgreSQL version is 16_
 PostgreSQL and locales installation.
 
 ```yaml
-postgresql_version: "15"
+postgresql_version: "16"
 
 # Debian only. Used to generate the locales used by PostgreSQL databases.
 postgresql_locales:
@@ -124,7 +126,32 @@ postgresql_locales:
 postgresql_locale_packages:
   - glibc-langpack-en
   - glibc-langpack-fr
+
+# Controls running tasks handling: postgreSQL packages installation
+postgresql_install: true
 ```
+
+
+### Patroni integration
+----
+When using Patroni to manage PostgreSQL replication, Patroni expects PostgreSQL packages be installed upfront. 
+However once the Patroni cluster is bootstrapped, the underlying PostgreSQL instances can be managed just like any other regular replication.
+
+In order to install PostgreSQL pacakges before bootstrapping a Patroni cluster this role can be invoked with the following variables which will cause the role to only perform installation.
+
+```yaml
+postgresql_is_patroni: true
+postgresql_install: true
+postgresql_only_install: true
+```
+
+
+After Patroni bootstrap this role can be invoked with the following combination of variables to essentially skip the packages installation and manage the cluster like a pre configuration replication setup:
+```yaml
+postgresql_is_patroni: true
+postgresql_install: false
+```
+
 
 ### Configuration 
 ----
@@ -152,7 +179,8 @@ postgresql_hba_raw: |
 
 # Allow service restart for configuration changes that require it
 postgresql_config_change_allow_restart: true
-
+# Controls running tasks handling: configuration
+postgresql_configure: true
 ```
 
 _Notes:_
@@ -255,8 +283,12 @@ postgresql_pg_basebackup_walmethod: stream  # none/stream/fetch
 postgresql_pg_basebackup_args: ""
 
 # Actual pg_basebackup built with the previous parameters
-# DO NOT override this variable except you know what you are doing 
+# DO NOT override this variable unless you know what you are doing 
 postgresql_pg_basebackup_cmd: {{ _postgresql_bin_path }}/pg_basebackup --no-password --host {{ postgresql_replication_primary_address }} --port {{ postgresql_replication_primary_port }} --username {{ postgresql_replication_user }} --pgdata {{ _postgresql_data_dir }} --checkpoint {{ postgresql_pg_basebackup_checkpoint }} {{ (postgresql_replication_slot != '') | ternary('--slot ' ~ postgresql_replication_slot, '') }} --wal-method {{ postgresql_pg_basebackup_walmethod }} --write-recovery-conf --verbose --progress {{ postgresql_pg_basebackup_args }}
+
+# Controls running tasks handling: actual replication configuration
+# DO NOT override this variable unless you know what you are doing
+postgresql_configure_replication: true
 ```
 
 ### Vacuum
@@ -572,6 +604,28 @@ postgresql_tempfile_mode: '0644'
 postgresql_tempfile_owner: root
 postgresql_tempfile_group: root
 
+# Controls running tasks handling: cluster initialization
+postgresql_initialize: true
+# Controls running tasks handling: engine specific objects like databases,users,tablespaces,ownerships,extensions,sqlquery executions
+postgresql_manage_objects: true
+# Controls running tasks handling: actual replication configuration
+postgresql_configure_replication: true
+
+# PostgreSQl connection vars object
+# This variable is used to feed common connection parameters when calling community.postgresql modules
+# to manage database objects (users, databases, schemas, etc..)
+postgresql_conn_vars:
+  ca_cert: null   # alias ssl_rootcert
+  connect_params: null
+  login_host: null
+  login_password: null
+  login_unix_socket: "{{ postgresql_unix_socket_directories[0] | d(null, true) }}"
+  login_user: "{{ postgresql_user }}"
+  login_port: "{{ postgresql_port }}"
+  session_role: null
+  ssl_cert: null
+  ssl_key: null
+  ssl_mode: null
 ```
 
 ### Uninstallation
@@ -588,9 +642,9 @@ If you want to uninstall a Postgresql installation with this role, set both vari
   gather_facts: true
 
   vars:
-    postgresql_version: "15"
+    postgresql_version: "16"
 
-    # Run debug tasks withint the role 
+    # Run debug tasks within the role
     postgresql_debug: true
 
     # Configuration

@@ -5,6 +5,10 @@ postgresql_version: 16
 postgresql_debug: false
 
 # Postgresql installation related variables
+# Controls running tasks handling: postgreSQL packages installation
+postgresql_install: true
+# Controls running tasks handling: cluster initialization
+postgresql_initialize: true
 # Debian only. Used to generate the locales used by PostgreSQL databases.
 postgresql_locales:
   - 'en_US.UTF-8'
@@ -20,6 +24,8 @@ postgresql_enablerepo: ""
 
 
 # Configuration related variables
+# Controls running tasks handling: configuration
+postgresql_configure: true
 postgresql_port: 5432
 postgresql_listen_addresses: 0.0.0.0
 postgresql_max_connections: 100
@@ -103,8 +109,26 @@ postgresql_group: postgres
 postgresql_service_state: started
 # Whether or not to enable the postgresql service after installation
 postgresql_service_enabled: true
+# PostgreSQl connection vars object
+# This variable is used to feed common connection parameters when calling community.postgresql modules
+# to manage database objects (users, databases, schemas, etc..)
+postgresql_conn_vars:
+  ca_cert: null   # alias ssl_rootcert
+  connect_params: null
+  login_host: null
+  login_password: null
+  login_unix_socket: "{{ postgresql_unix_socket_directories[0] | d(null, true) }}"
+  login_user: "{{ postgresql_user }}"
+  login_port: "{{ postgresql_port }}"
+  session_role: null
+  ssl_cert: null
+  ssl_key: null
+  ssl_mode: null
 
 
+# PosgreSQL objects management
+# Controls running tasks handling: engine specific objects like databases,users,tablespaces,ownerships,extensions,sqlquery executions
+postgresql_manage_objects: true
 # Manage tablespaces
 postgresql_tablespaces: []
   # - name: ssd
@@ -199,8 +223,10 @@ postgresql_replication_slots: []
 # Replication related variables
 # Activate postgresql replication
 postgresql_replication: false
+# Controls running tasks handling: actual replication configuration
+postgresql_configure_replication: true
 # Server role in the replication process
-postgresql_replication_role: "" # primary/replica
+postgresql_replication_role: ""  # primary/replica
 postgresql_replication_user: replication_user
 postgresql_replication_password: password
 # Address/DNS name of the primary server used in the pg_basebackup
@@ -342,3 +368,9 @@ postgresql_https_pkg_proxy: ''
 # Confirm twice that postgresql should be uninstalled
 postgresql_uninstall_1: false
 postgresql_uninstall_2: false
+
+
+# Tells the role that the PostgreSQL instance is managed by Patroni therefore automatically disabling some features initialization,auto tuning,regular configuration, actual replication configuration
+postgresql_is_patroni: false
+# When combined with postgresql_install:true, this essentially skips all remaining tasks after packages installation
+postgresql_only_install: false
