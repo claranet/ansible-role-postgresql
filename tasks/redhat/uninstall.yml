@@ -4,7 +4,7 @@
     name: "{{ _postgresql_packages | select('match', 'postgresql') }}"
     state: absent
 
-- name: Uninstall postgresql rpm repostiory
+- name: Uninstall postgresql rpm repository
   ansible.builtin.dnf:
     name: "{{ _postgresql_repo_rpm_url }}"
     update_cache: true
