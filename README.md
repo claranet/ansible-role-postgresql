@@ -181,9 +181,15 @@ postgresql_hba_raw: |
 postgresql_config_change_allow_restart: true
 # Controls running tasks handling: configuration
 postgresql_configure: true
+# Enable SSL
+postgresql_ca_enabled: true
+# Certificate file subject used during generation
+postgresql_ssl_cert_subj: /C=FR/ST=FR
 ```
 
 _Notes:_
+
+SSL configuration (introduced in `v3.0.0`) is enabled by default. The associated key and cert files are only regenerated if they are missing on the remote host. 
 
 By default, this role restarts the PostgreSQL service during subsequent configuration changes after the initial engine installation, ensuring all changes are applied immediately. However, this behavior can cause potential service outages.
 
@@ -603,6 +609,10 @@ postgresql_tempfile_dest_path: /etc/tmpfiles.d/postgresql-common.conf
 postgresql_tempfile_mode: '0644'
 postgresql_tempfile_owner: root
 postgresql_tempfile_group: root
+# SSL cert file path, can be absolute or relative (to data dir)
+# postgresql_ssl_cert_file: (default is os specific. vars/<os>.yml)
+# SSL key file path, can be absolute or relative (to data dir)
+# postgresql_ssl_key_file: (default is os specific. vars/<os>.yml)
 
 # Controls running tasks handling: cluster initialization
 postgresql_initialize: true

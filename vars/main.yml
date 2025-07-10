@@ -31,9 +31,18 @@ _postgresql_service_state: started
 
 _postgresql_apt_mirror_url: http://apt.postgresql.org/pub/repos/apt
 _postgresql_apt_repo_template_path: templates/etc/apt/sources.list.d/pgdb.list.j2
-_postgresql_repo_rpm_url: "https://download.postgresql.org/pub/repos/yum/reporpms/{{ (ansible_distro == 'fedora') | ternary('F', 'EL') }}-{{ ansible_distribution_major_version }}-x86_64/pgdg-{{ (ansible_distro == 'fedora') | ternary('fedora', 'redhat') }}-repo-latest.noarch.rpm"
+_postgresql_repo_rpm_url: "https://download.postgresql.org/pub/repos/yum/reporpms/{{ (ansible_distro == 'fedora') | ternary('F', 'EL') }}-{{ ansible_distribution_major_version }}-x86_64/pgdg-{{ (ansible_distro == 'fedora') | ternary('fedora', 'redhat') }}-repo-latest.noarch.rpm" # noqa: yaml[line-length]
 _postgresql_unix_socket_directories_mode: "{{ postgresql_unix_socket_directories_mode | d('2775', true) }}"
 _postgresql_service_path: "{{ postgresql_service_path | d('', true) }}"
 _postgresql_virtualenv_path: "{{ _postgresql_user_home_dir | d('~', true) }}/.venv.claranet.postgresql"
 _postgresql_ansible_python_interpreter: "{{ _postgresql_virtualenv_path }}/bin/python"
 _postgresql_pythonized_path: "{{ ansible_env.PATH }}:{{ _postgresql_bin_path }}:{{ _postgresql_virtualenv_path }}/bin"
+# SSL key/cert generation
+_postgresql_ssl_key_file_path: "{{ postgresql_ssl_key_file if (postgresql_ssl_key_file | dirname != '')
+  else _postgresql_data_dir ~ '/' ~ postgresql_ssl_key_file }}"
+_postgresql_ssl_cert_file_path: "{{ postgresql_ssl_cert_file if (postgresql_ssl_cert_file | dirname != '')
+else _postgresql_data_dir ~ '/' ~ postgresql_ssl_cert_file }}"
+_postgresql_ssl_key_gen_cmd: openssl genrsa -out "{{ _postgresql_ssl_key_file_path }}" 4096
+_postgresql_ssl_cert_gen_cmd: >
+  openssl req -new -x509 -days 36500 -subj "{{ postgresql_ssl_cert_subj }}"
+  -key "{{ _postgresql_ssl_key_file_path }}" -outform PEM -out "{{ _postgresql_ssl_cert_file_path }}"

@@ -37,12 +37,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
-        with:
-          path: "${{ github.repository }}"
       - name: Run ansible lint
-        uses: ansible/ansible-lint-action@v6.17.0
+        uses: ansible/ansible-lint@main
         with:
-          path: "."
+          args: ""
+          setup_python: "true"
+          working_directory: ""
+          requirements_file: "./molecule/shared/tools/requirements.yml"
+
 
   test:
     name: Scenario "${{ matrix.scenario }}", pg-${{ matrix.postgresql_version }} on ${{ matrix.config.image }}:${{ matrix.config.tag }}

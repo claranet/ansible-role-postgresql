@@ -6,5 +6,5 @@
     - name: Include default verification
       ansible.builtin.include_tasks: tasks/verify_default.yml
 
-    - name: Include default verification
+    - name: Include vacuum verification
       ansible.builtin.include_tasks: tasks/verify_vacuum.yml

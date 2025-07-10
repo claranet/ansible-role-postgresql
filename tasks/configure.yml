@@ -47,70 +47,46 @@
     mode: "{{ postgresql_tempfile_mode }}"
   when: postgresql_persist_permissions
 
-- name: SSl files
-  block: 
-    - name: Set full path for key file 
-      set_fact:
-        postgresql_ssl_key_file_full: "{{ _postgresql_ssl_key_file if ( _postgresql_ssl_key_file | dirname != '')  else _postgresql_data_dir ~ '/' ~ _postgresql_ssl_key_file  }}"
-
-    - name: Set full path for cert file 
-      set_fact:
-        postgresql_ssl_cert_file_full: "{{ _postgresql_ssl_cert_file if ( _postgresql_ssl_cert_file | dirname != '')  else _postgresql_data_dir ~ '/' ~ _postgresql_ssl_cert_file  }}"
-
+- name: Configure SSL
+  when: postgresql_ca_enabled
+  become: true
+  block:
     - name: Stat CA private key
-      stat: path="{{ postgresql_ssl_key_file_full }}"
-      register: postgresql_ssl_key_file_stat
+      ansible.builtin.stat:
+        path: "{{ _postgresql_ssl_key_file_path }}"
+      register: _postgresql_ssl_key_file_res
 
     - name: Create CA private key
-      command: >
-        openssl genrsa
-        -out "{{ postgresql_ssl_key_file_full }}"
-        4096
+      changed_when: true
+      when: not _postgresql_ssl_key_file_res.stat.exists
+      ansible.builtin.command: "{{ _postgresql_ssl_key_gen_cmd }}"
       args:
-        creates: "{{ postgresql_ssl_key_file_full }}"
-      when: not postgresql_ssl_key_file_stat.stat.exists
+        creates: "{{ _postgresql_ssl_key_file_path }}"
 
     - name: Stat CA cert
-      stat: path="{{ postgresql_ssl_cert_file_full }}"
-      register: postgresql_ssl_cert_file_stat
+      ansible.builtin.stat:
+        path: "{{ _postgresql_ssl_cert_file_path }}"
+      register: _postgresql_ssl_cert_file_res
 
     - name: Create CA cert
-      command: >
-        openssl req -new -x509 -days 36500
-        -subj "/C=FR/ST=FR/L=Rennes"
-        -key "{{ postgresql_ssl_key_file_full }}"     
-        -outform PEM -out "{{ postgresql_ssl_cert_file_full }}"
-#      args:
-#        creates: "{{ postgresql_ssl_cert_file_full }}"
-      when: not postgresql_ssl_key_file_stat.stat.exists or not postgresql_ssl_cert_file_stat.stat.exists
+      changed_when: true
+      when: not _postgresql_ssl_key_file_res.stat.exists or not _postgresql_ssl_cert_file_res.stat.exists
+      ansible.builtin.command: "{{ _postgresql_ssl_cert_gen_cmd }}"
 
-    - name: Set owner on key file
-      file:
-        path: "{{ postgresql_ssl_key_file_full }}"
-        owner: postgres
-        group: postgres
-      when: _postgresql_ssl_key_file | dirname == ''
-
-    - name: Set owner on cert file
-      file:
-        path: "{{ postgresql_ssl_cert_file_full }}"
-        owner: postgres
-        group: postgres
-      when: _postgresql_ssl_cert_file | dirname == ''
-
-    - name: Set permission on private key file
-      file:
-        path: "{{ postgresql_ssl_key_file_full }}"
-        mode: '0400'
-      when: _postgresql_ssl_key_file | dirname == ''
-
-    - name: Set permission on cert file
-      file:
-        path: "{{ postgresql_ssl_cert_file_full }}"
-        mode: '0666'
-      when: _postgresql_ssl_cert_file | dirname == ''
-  become: true
-  when: postgresql_ca_enabled
+    - name: Set owner on key and cert files
+      when: item.when
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        owner: "{{ postgresql_user }}"
+        group: "{{ postgresql_group }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - path: "{{ _postgresql_ssl_key_file_path }}"
+          mode: '0400'
+          when: _postgresql_ssl_key_file | dirname == ''
+        - path: "{{ _postgresql_ssl_cert_file_path }}"
+          mode: '0666'
+          when: _postgresql_ssl_cert_file | dirname == ''
 
 - name: Set postgresql service enabled and started state
   ansible.builtin.service:

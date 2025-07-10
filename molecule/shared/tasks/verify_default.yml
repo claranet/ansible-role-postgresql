@@ -56,3 +56,16 @@
     msg: "Timeout waiting for 5432 to respond"
   register: port_check
   ignore_errors: true
+
+- name: Retrieve ssl option value
+  ansible.builtin.command: psql -q -A -t -c "show ssl"
+  register: ssl_res
+  changed_when: false
+  become: true
+  become_user: postgres
+  vars:
+    ansible_ssh_pipelining: true
+
+- name: Assert ssl is on by default
+  ansible.builtin.assert:
+    that: '"on" == (ssl_res.stdout | trim)'

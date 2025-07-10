@@ -17,6 +17,7 @@
       ansible.builtin.command: psql -q -A -t -c "SELECT datname FROM pg_database"
       register: databases
       changed_when: false
+      become: true
       become_user: postgres
       vars:
         ansible_ssh_pipelining: true
@@ -37,15 +38,16 @@
       vars:
         ansible_ssh_pipelining: true
 
-    - name: Retrieve databases on replica nodes
+    - name: Retrieve databases on replica nodes to check deletion
       ansible.builtin.command: psql -q -A -t -c "SELECT datname FROM pg_database"
       register: databases
       changed_when: false
+      become: true
       become_user: postgres
       vars:
         ansible_ssh_pipelining: true
 
-    - name: Assert db created on primary is also present on the replicas
+    - name: Assert db not created on primary is also present on the replicas
       ansible.builtin.assert:
         that: '"db2" not in databases.stdout_lines'
 
