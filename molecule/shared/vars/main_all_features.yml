@@ -10,7 +10,7 @@ postgresql_global_config_options_extra:
   - option: log_statement
     value: all
   - option: logging_collector
-    value: on
+    value: 'on'
 postgresql_hba_entries_extra: []
   # - {contype: local, databases: all, users: postgres, method: peer}
 
@@ -36,20 +36,20 @@ postgresql_users:
 postgresql_memberships:
 # Ensure the role 'user1' belongs to group 'group1'
   - groups:
-    - group1
+      - group1
     target_roles:
-    - user1
+      - user1
     state: present
 # Ensure the role 'user2' does not belong to the group 'group2'
   - groups:
-    - group2
+      - group2
     target_roles:
-    - user2
+      - user2
     state: absent
 # Ensure the role 'jdoe' does not belong to any group
   - groups: []
     target_roles:
-    - jdoe
+      - jdoe
     state: exact
 
 postgresql_tablespaces:

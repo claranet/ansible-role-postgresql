@@ -39,8 +39,17 @@ postgresql_unix_socket_directories:
   - /run/postgresql
 # Permissions for the PostgreSQL unix sockets (default is distro dependant)
 postgresql_unix_socket_directories_mode: ''
-# Allow service restart for configuration changes that require it
-postgresql_config_change_allow_restart: "{{ (postgresql_restarted_state | d('restarted')) == 'restarted' }}"
+# Allow service restart for conf changes that require it (default changed to false in v3.0.0+)
+postgresql_config_change_allow_restart: false
+# SSL related variables
+# Enable SSL
+postgresql_ca_enabled: true
+# SSL cert file path, can be absolute or relative
+# postgresql_ssl_cert_file: (default is os specific. vars/<os>.yml)
+# SSL key file path, can be absolute or relative
+# postgresql_ssl_key_file: (default is os specific. vars/<os>.yml)
+# Certificate file subject used during generation
+postgresql_ssl_cert_subj: /C=FR/ST=FR
 
 
 # Global configuration options that will be set in postgresql.conf.
@@ -61,6 +70,13 @@ postgresql_global_config_options:
     value: "{{ _postgresql_config_path }}/pg_hba.conf"
   - option: max_connections
     value: "{{ postgresql_max_connections }}"
+  - option: ssl
+    value: "{{ 'on' if postgresql_ca_enabled else 'off' }}"
+  - option: ssl_cert_file
+    value: '{{ postgresql_ssl_cert_file }}'
+  - option: ssl_key_file
+    value: '{{ postgresql_ssl_key_file }}'
+
 # Extra configuration options that are always inserted inside postgresql.conf
 postgresql_global_config_options_extra: []
 # Actual postgresql log directory
@@ -370,7 +386,8 @@ postgresql_uninstall_1: false
 postgresql_uninstall_2: false
 
 
-# Tells the role that the PostgreSQL instance is managed by Patroni therefore automatically disabling some features initialization,auto tuning,regular configuration, actual replication configuration
+# Tells the role that the PostgreSQL instance is managed by Patroni therefore automatically
+# disabling some features initialization,auto tuning,regular configuration, actual replication configuration
 postgresql_is_patroni: false
 # When combined with postgresql_install:true, this essentially skips all remaining tasks after packages installation
 postgresql_only_install: false

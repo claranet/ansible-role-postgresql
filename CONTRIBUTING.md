@@ -46,7 +46,7 @@ git clone <link-to-this-repository> ansible-role-postgresql
 cd ansible-role-postgresql
 python3 -m venv env # Create a virtual environnement
 source env/bin/activate # Activate the environnement
-pip3 install ansible ansible-lint molecule[docker] # Install the python packages in the virutal environnement
+pip3 install ansible ansible-lint molecule-plugins[docker] # Install the python packages in the virutal environnement
 ```
 
 After setting up the environnement you can use molecule to test the role as you wish. If you are not very familiar with molecule, checkout the following table for some basic commands you can run against this role.

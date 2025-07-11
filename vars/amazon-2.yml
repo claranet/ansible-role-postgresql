@@ -9,3 +9,6 @@ _postgresql_packages:
   - postgresql-server
   - postgresql-contrib
   - postgresql-libs
+# SSL files default path
+postgresql_ssl_cert_file: server.crt
+postgresql_ssl_key_file: server.key

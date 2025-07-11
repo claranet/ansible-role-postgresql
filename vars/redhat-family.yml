@@ -17,3 +17,6 @@ _postgresql_packages:
   - pg_activity
 _postgresql_unix_socket_directories_mode: "{{ postgresql_unix_socket_directories_mode | d('0755', true) }}"
 _postgresql_service_path: "{{ postgresql_service_path | d('/usr/lib/systemd/system/postgresql-' ~ postgresql_version ~ '.service', true) }}"
+# SSL files default path
+postgresql_ssl_cert_file: server.crt
+postgresql_ssl_key_file: server.key

@@ -1,5 +1,5 @@
 ---
-- name: Install postgresql rpm repostiory
+- name: Install postgresql rpm repository
   ansible.builtin.dnf:
     name: "{{ _postgresql_repo_rpm_url }}"
     update_cache: true
