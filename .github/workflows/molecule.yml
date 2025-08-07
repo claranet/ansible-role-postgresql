@@ -71,9 +71,6 @@ jobs:
           - name: debian12
             image: "debian"
             tag: "12"
-          - name: ubuntu20
-            image: "ubuntu"
-            tag: "20.04"
           - name: ubuntu22
             image: "ubuntu"
             tag: "22.04"

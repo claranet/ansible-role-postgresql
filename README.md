@@ -87,7 +87,6 @@ Linux/PostgreSQL  |  12  |  13  |  14  |  15  | 16   |  17
 ------------------|:----:|:----:|:----:|:----:|:----:|:----:
 Debian 11         | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
 Debian 12         | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
-Ubuntu 20.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
 Ubuntu 22.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
 Ubuntu 24.04      | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
 RockyLinux 8.9    | Yes  | Yes  | Yes  | Yes  |  Yes |  Yes
