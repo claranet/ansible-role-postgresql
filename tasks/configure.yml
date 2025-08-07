@@ -12,6 +12,7 @@
   notify: Reload postgresql
 
 - name: Configure host based authentication (if entries are configured).
+  when: postgresql_configure_pghba
   ansible.builtin.template:
     src: "{{ postgresql_hba_template_path }}"
     dest: "{{ _postgresql_config_path }}/pg_hba.conf"

@@ -19,7 +19,7 @@
 
 - name: Ensure PostgreSQL packages are installed.
   ansible.builtin.apt:
-    name: "{{ _postgresql_packages }}"
+    name: "{{ postgresql_packages | d(_postgresql_packages) }}"
     state: present
     update_cache: true
   environment: "{{ _postgresql_pkg_proxy_env }}"

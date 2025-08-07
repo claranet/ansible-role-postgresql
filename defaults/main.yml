@@ -14,6 +14,8 @@ postgresql_locales:
   - 'en_US.UTF-8'
   - 'fr_FR.UTF-8'
 
+# Allows overriding packages used to install PostgreSQL
+# postgresql_packages: []
 # Redhat only. For more info check: https://www.thegeekdiary.com/how-to-add-locale-on-centos-rhel-8/
 postgresql_locale_packages:
   - glibc-langpack-en
@@ -26,6 +28,8 @@ postgresql_enablerepo: ""
 # Configuration related variables
 # Controls running tasks handling: configuration
 postgresql_configure: true
+# Include pg_hba file update as part of configuration process
+postgresql_configure_pghba: true
 postgresql_port: 5432
 postgresql_listen_addresses: 0.0.0.0
 postgresql_max_connections: 100

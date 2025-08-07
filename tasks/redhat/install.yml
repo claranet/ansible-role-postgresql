@@ -58,7 +58,7 @@
 
 - name: Ensure PostgreSQL packages (including locales) are installed.
   ansible.builtin.dnf:
-    name: "{{ _postgresql_packages + postgresql_locale_packages }}"
+    name: "{{ postgresql_packages | d(_postgresql_packages) + postgresql_locale_packages }}"
     state: present
     enablerepo: "{{ postgresql_enablerepo | d(omit, true) }}"
     # Don't let postgresql-contrib cause the /usr/bin/python symlink

@@ -575,6 +575,10 @@ Check the links for a documentation on all the available options for defining it
 ----
 It is highly recommended you modify these variables only if you know what you're doing.
 ```yaml
+# Allows overriding packages used to install PostgreSQL
+# postgresql_packages: []
+# Include pg_hba file update as part of configuration process
+postgresql_configure_pghba: true
 # New postgresql installation datadir
 postgresql_data_dir: 
 # Extra arguments passed to the initdb binary during database initialization
