@@ -38,10 +38,10 @@ _postgresql_virtualenv_path: "{{ _postgresql_user_home_dir | d('~', true) }}/.ve
 _postgresql_ansible_python_interpreter: "{{ _postgresql_virtualenv_path }}/bin/python"
 _postgresql_pythonized_path: "{{ ansible_env.PATH }}:{{ _postgresql_bin_path }}:{{ _postgresql_virtualenv_path }}/bin"
 # SSL key/cert generation
-_postgresql_ssl_key_file_path: "{{ postgresql_ssl_key_file if (postgresql_ssl_key_file | dirname != '')
-  else _postgresql_data_dir ~ '/' ~ postgresql_ssl_key_file }}"
-_postgresql_ssl_cert_file_path: "{{ postgresql_ssl_cert_file if (postgresql_ssl_cert_file | dirname != '')
-  else _postgresql_data_dir ~ '/' ~ postgresql_ssl_cert_file }}"
+_postgresql_ssl_key_file_path: "{{ _postgresql_ssl_key_file if (_postgresql_ssl_key_file | dirname != '')
+  else _postgresql_data_dir ~ '/' ~ _postgresql_ssl_key_file }}"
+_postgresql_ssl_cert_file_path: "{{ _postgresql_ssl_cert_file if (_postgresql_ssl_cert_file | dirname != '')
+  else _postgresql_data_dir ~ '/' ~ _postgresql_ssl_cert_file }}"
 _postgresql_ssl_key_gen_cmd: openssl genrsa -out "{{ _postgresql_ssl_key_file_path }}" 4096
 _postgresql_ssl_cert_gen_cmd: >
   openssl req -new -x509 -days 36500 -subj "{{ postgresql_ssl_cert_subj }}"

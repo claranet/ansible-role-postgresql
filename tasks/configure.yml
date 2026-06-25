@@ -84,10 +84,10 @@
       loop:
         - path: "{{ _postgresql_ssl_key_file_path }}"
           mode: '0400'
-          when: "{{ postgresql_ssl_key_file | dirname == '' }}"
+          when: "{{ _postgresql_ssl_key_file | dirname == '' }}"
         - path: "{{ _postgresql_ssl_cert_file_path }}"
           mode: '0666'
-          when: "{{ postgresql_ssl_cert_file | dirname == '' }}"
+          when: "{{ _postgresql_ssl_cert_file | dirname == '' }}"
 
 - name: Set postgresql service enabled and started state
   ansible.builtin.service:

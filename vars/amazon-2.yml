@@ -10,5 +10,5 @@ _postgresql_packages:
   - postgresql-contrib
   - postgresql-libs
 # SSL files default path
-postgresql_ssl_cert_file: server.crt
-postgresql_ssl_key_file: server.key
+_postgresql_ssl_cert_file: "{{ postgresql_ssl_cert_file | d('server.crt') }}"
+_postgresql_ssl_key_file: "{{ postgresql_ssl_key_file | d('server.key') }}"
