@@ -41,3 +41,14 @@
   ansible.builtin.set_fact:
     postgresql_conn_vars: "{{ postgresql_conn_vars }}"
   no_log: "{{ postgresql_debug }}"
+
+- name: Retrieve postgresql user's info
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ postgresql_user }}"
+  failed_when: false
+
+- name: Set fact for postgresql user's home directory
+  ansible.builtin.set_fact:
+    _postgresql_user_home_dir: "{{ ansible_facts.getent_passwd[postgresql_user][4] }}"
+  when: ansible_facts.getent_passwd is defined and postgresql_user in ansible_facts.getent_passwd
