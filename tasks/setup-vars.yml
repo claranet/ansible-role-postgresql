@@ -46,7 +46,7 @@
   ansible.builtin.getent:
     database: passwd
     key: "{{ postgresql_user }}"
-  failed_when: false
+  ignore_errors: true  # noqa: ignore-errors
 
 - name: Set fact for postgresql user's home directory
   ansible.builtin.set_fact:
