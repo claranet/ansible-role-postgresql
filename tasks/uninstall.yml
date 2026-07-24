@@ -14,11 +14,15 @@
     name: "{{ postgresql_backup_cron_job_name }}"
     state: absent
 
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
 - name: Stop postgresql service
   ansible.builtin.systemd:
     name: "{{ _postgresql_daemon }}"
     state: stopped
     enabled: false
+  when: _postgresql_daemon ~ '.service' in ansible_facts.services
 
 - name: Import tasks (debian/uninstall.yml)
   ansible.builtin.import_tasks: debian/uninstall.yml

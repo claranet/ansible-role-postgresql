@@ -77,9 +77,9 @@ postgresql_global_config_options:
   - option: ssl
     value: "{{ 'on' if postgresql_ca_enabled else 'off' }}"
   - option: ssl_cert_file
-    value: '{{ postgresql_ssl_cert_file }}'
+    value: '{{ _postgresql_ssl_cert_file }}'
   - option: ssl_key_file
-    value: '{{ postgresql_ssl_key_file }}'
+    value: '{{ _postgresql_ssl_key_file }}'
 
 # Extra configuration options that are always inserted inside postgresql.conf
 postgresql_global_config_options_extra: []

@@ -16,5 +16,5 @@ _postgresql_packages:
   # installing this package also install the latest postgresql server package and because
   # - postgresql-contrib
 # SSL files default path
-postgresql_ssl_cert_file: /etc/ssl/certs/ssl-cert-snakeoil.pem
-postgresql_ssl_key_file: /etc/ssl/private/ssl-cert-snakeoil.key
+_postgresql_ssl_cert_file: "{{ postgresql_ssl_cert_file | d('/etc/ssl/certs/ssl-cert-snakeoil.pem') }}"
+_postgresql_ssl_key_file: "{{ postgresql_ssl_key_file | d('/etc/ssl/private/ssl-cert-snakeoil.key') }}"

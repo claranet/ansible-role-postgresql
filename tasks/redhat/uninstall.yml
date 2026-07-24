@@ -6,9 +6,6 @@
 
 - name: Uninstall postgresql rpm repository
   ansible.builtin.dnf:
-    name: "{{ _postgresql_repo_rpm_url }}"
-    update_cache: true
-    disable_gpg_check: true
+    name: "{{ _postgresql_repo_rpm_package }}"
     state: absent
-  tags: skip_ansible_lint
   environment: "{{ _postgresql_pkg_proxy_env }}"

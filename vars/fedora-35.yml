@@ -12,5 +12,5 @@ _postgresql_unix_socket_directories_mode: "{{ postgresql_unix_socket_directories
 # Fedora 32 containers only have python3 by default
 postgresql_python_library: python3-psycopg2
 # SSL files default path
-postgresql_ssl_cert_file: server.crt
-postgresql_ssl_key_file: server.key
+_postgresql_ssl_cert_file: "{{ postgresql_ssl_cert_file | d('server.crt') }}"
+_postgresql_ssl_key_file: "{{ postgresql_ssl_key_file | d('server.key') }}"
